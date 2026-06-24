@@ -71,6 +71,11 @@ export const es = {
     sessionTypes: 'Tipos de sesión',
     totalSessions: 'Total de sesiones',
     totalLaps: 'Total de vueltas',
+    calendarHeatmap: 'Calendario de actividad',
+    trackTreemap: 'Pistas más frecuentes',
+    boxPlot: 'Distribución de tiempos por pista',
+    winRate: 'Tasa de podio',
+    aiHistogram: 'Distribución de nivel IA',
   },
   weather: {
     clear: 'Despejado',
@@ -79,6 +84,7 @@ export const es = {
     fog: 'Niebla',
     ambient: 'Ambiente',
     road: 'Pista',
+    conditions: 'Condiciones',
   },
   assists: {
     title: 'Asistencias',
@@ -88,6 +94,19 @@ export const es = {
     autoShifter: 'Cambios automáticos',
     autoClutch: 'Embrague automático',
     idealLine: 'Línea ideal',
+    damage: 'Daño',
+    tyreWear: 'Desgaste de neumáticos',
+  },
+  radar: {
+    title: 'Radar de consistencia',
+    bestLap: 'Mejor Vuelta',
+    average: 'Promedio',
+    consistency: 'Consistencia',
+  },
+  ai: {
+    opponents: 'Oponentes IA',
+    levelDistribution: 'Distribución de nivel IA',
+    average: 'Promedio',
   },
   common: {
     back: 'Volver',
@@ -96,7 +115,11 @@ export const es = {
     error: 'Error',
     noData: 'Sin datos',
     sector: 'Sector',
+    sessions: 'sesiones',
+    less: 'Menos',
+    more: 'Más',
   },
 } as const;
 
 export type TranslationKey = keyof typeof es;
+

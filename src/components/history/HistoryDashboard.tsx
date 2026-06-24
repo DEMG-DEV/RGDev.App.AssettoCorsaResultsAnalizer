@@ -5,6 +5,11 @@ import { useSessionStore } from '../../stores/session-store';
 import { computeHistoryStats } from '../../core/analyzers/history-analyzer';
 import { humanizeCarId, humanizeTrackName } from '../../core/utils/car-name-humanizer';
 import { formatLapTime } from '../../core/utils/time-formatter';
+import { CalendarHeatmap } from '../charts/CalendarHeatmap';
+import { TrackTreemap } from '../charts/TrackTreemap';
+import { LapTimeBoxPlot } from '../charts/LapTimeBoxPlot';
+import { WinPodiumRate } from '../charts/WinPodiumRate';
+import { AiLevelHistogram } from '../charts/AiLevelHistogram';
 import { es } from '../../i18n/es';
 
 const PIE_COLORS = ['#60A5FA', '#F472B6', '#34D399', '#FBBF24', '#A78BFA', '#FB923C', '#22D3EE', '#F87171'];
@@ -20,16 +25,6 @@ const TYPE_COLORS: Record<string, string> = {
 export const HistoryDashboard: React.FC = () => {
   const results = useSessionStore(s => s.results);
   const stats = computeHistoryStats(results);
-
-  // Track frequency data
-  const trackData = Array.from(stats.trackFrequency.entries())
-    .sort((a, b) => b[1] - a[1])
-    .slice(0, 10)
-    .map(([track, count]) => {
-      const parts = track.split('/');
-      const name = humanizeTrackName(parts[0]!, parts[1]);
-      return { name: name.slice(0, 20), count };
-    });
 
   // Car usage data
   const carData = Array.from(stats.carUsage.entries())
@@ -56,16 +51,6 @@ export const HistoryDashboard: React.FC = () => {
     date: pt.date.toLocaleDateString('es-MX'),
   }));
 
-  // Calendar heatmap data (simplified as bar chart by month)
-  const monthCounts = new Map<string, number>();
-  for (const [dateStr, count] of stats.calendarData) {
-    const month = dateStr.slice(0, 7); // YYYY-MM
-    monthCounts.set(month, (monthCounts.get(month) ?? 0) + count);
-  }
-  const calendarData = Array.from(monthCounts.entries())
-    .sort()
-    .map(([month, count]) => ({ month, count }));
-
   return (
     <div className="animate-in">
       <h1 style={{ marginBottom: 'var(--space-lg)' }}>📈 {es.history.title}</h1>
@@ -88,9 +73,20 @@ export const HistoryDashboard: React.FC = () => {
           <div className="label">Autos</div>
           <div className="value">{stats.carUsage.size}</div>
         </div>
+        {stats.podiumRates.totalRaces > 0 && (
+          <div className="stat-card">
+            <div className="label">🏆 Victorias</div>
+            <div className="value" style={{ color: '#FFD700' }}>{stats.podiumRates.wins}</div>
+          </div>
+        )}
       </div>
 
       <div className="charts-grid">
+        {/* Calendar Heatmap (Full width) */}
+        <div className="full-width">
+          <CalendarHeatmap calendarData={stats.calendarData} />
+        </div>
+
         {/* Performance Trend */}
         {trendData.length > 1 && (
           <div className="chart-container full-width">
@@ -114,19 +110,8 @@ export const HistoryDashboard: React.FC = () => {
           </div>
         )}
 
-        {/* Track Frequency */}
-        <div className="chart-container">
-          <h3>🗺️ {es.history.trackFrequency}</h3>
-          <ResponsiveContainer width="100%" height={300}>
-            <BarChart data={trackData} layout="vertical" margin={{ left: 120 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="var(--border-subtle)" />
-              <XAxis type="number" stroke="var(--text-muted)" fontSize={11} />
-              <YAxis type="category" dataKey="name" stroke="var(--text-muted)" fontSize={10} width={110} />
-              <Tooltip contentStyle={{ background: 'var(--bg-glass)', border: '1px solid var(--border-subtle)', borderRadius: 'var(--radius-md)' }} />
-              <Bar dataKey="count" name="Sesiones" fill="var(--chart-1)" radius={[0, 4, 4, 0]} />
-            </BarChart>
-          </ResponsiveContainer>
-        </div>
+        {/* Track Treemap (replaces old bar chart) */}
+        <TrackTreemap trackFrequency={stats.trackFrequency} />
 
         {/* Car Usage Donut */}
         <div className="chart-container">
@@ -151,6 +136,23 @@ export const HistoryDashboard: React.FC = () => {
           </div>
         </div>
 
+        {/* Lap Time Box Plot (Full width) */}
+        {stats.boxPlotData.length > 0 && (
+          <div className="full-width">
+            <LapTimeBoxPlot data={stats.boxPlotData} />
+          </div>
+        )}
+
+        {/* Win/Podium Rate (Half) */}
+        {stats.podiumRates.totalRaces > 0 && (
+          <WinPodiumRate rates={stats.podiumRates} />
+        )}
+
+        {/* AI Level Histogram (Half) */}
+        {stats.aiLevelHistogram.size > 0 && (
+          <AiLevelHistogram histogram={stats.aiLevelHistogram} />
+        )}
+
         {/* Session Types */}
         <div className="chart-container">
           <h3>📋 {es.history.sessionTypes}</h3>
@@ -168,23 +170,8 @@ export const HistoryDashboard: React.FC = () => {
             </BarChart>
           </ResponsiveContainer>
         </div>
-
-        {/* Activity by Month */}
-        {calendarData.length > 1 && (
-          <div className="chart-container">
-            <h3>📅 Actividad por mes</h3>
-            <ResponsiveContainer width="100%" height={200}>
-              <BarChart data={calendarData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="var(--border-subtle)" />
-                <XAxis dataKey="month" stroke="var(--text-muted)" fontSize={10} />
-                <YAxis stroke="var(--text-muted)" fontSize={11} />
-                <Tooltip contentStyle={{ background: 'var(--bg-glass)', border: '1px solid var(--border-subtle)', borderRadius: 'var(--radius-md)' }} />
-                <Bar dataKey="count" name="Sesiones" fill="var(--chart-3)" radius={[4, 4, 0, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-        )}
       </div>
     </div>
   );
 };
+

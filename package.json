@@ -7,19 +7,27 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "preview": "vite preview",
-    "test": "vitest"
+    "test": "vitest",
+    "tauri:dev": "tauri dev",
+    "tauri:build": "tauri build",
+    "cap:sync": "pnpm build && npx cap sync",
+    "cap:open": "npx cap open android"
   },
   "dependencies": {
+    "@capacitor/android": "^8.4.1",
+    "@capacitor/cli": "^8.4.1",
+    "@capacitor/core": "^8.4.1",
+    "@tanstack/react-table": "^8.21.3",
+    "jszip": "^3.10.1",
+    "lucide-react": "^0.514.0",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
     "react-router-dom": "^7.6.2",
-    "zustand": "^5.0.5",
     "recharts": "^2.15.3",
-    "@tanstack/react-table": "^8.21.3",
-    "jszip": "^3.10.1",
-    "lucide-react": "^0.514.0"
+    "zustand": "^5.0.5"
   },
   "devDependencies": {
+    "@tauri-apps/cli": "^2.11.3",
     "@types/react": "^19.1.6",
     "@types/react-dom": "^19.1.6",
     "@vitejs/plugin-react": "^4.5.2",

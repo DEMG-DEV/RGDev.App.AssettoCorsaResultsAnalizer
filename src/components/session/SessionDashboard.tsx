@@ -12,6 +12,10 @@ import { SectorComparisonChart } from '../charts/SectorComparisonChart';
 import { GapToLeaderChart } from '../charts/GapToLeaderChart';
 import { FinishStatusDonut } from '../charts/FinishStatusDonut';
 import { TyreStrategyTimeline } from '../charts/TyreStrategyTimeline';
+import { ConsistencyRadar } from '../charts/ConsistencyRadar';
+import { WeatherCard } from '../charts/WeatherCard';
+import { AssistsGaugeCluster } from '../charts/AssistsGaugeCluster';
+import { AiOpponentsBar } from '../charts/AiOpponentsBar';
 import { es } from '../../i18n/es';
 
 interface Props {
@@ -30,6 +34,10 @@ const TYPE_LABELS: Record<string, string> = {
 export const SessionDashboard: React.FC<Props> = ({ session, sessionDate }) => {
   const trackName = humanizeTrackName(session.track.venue, session.track.course);
   const bestLapData = getSessionBestLap(session);
+
+  const hasCmMetadata = !!session.cmMetadata;
+  const hasAssists = !!session.cmMetadata?.assists;
+  const hasAiOpponents = session.cmMetadata?.carMetadata && session.cmMetadata.carMetadata.size > 0;
 
   return (
     <div className="animate-in">
@@ -91,6 +99,25 @@ export const SessionDashboard: React.FC<Props> = ({ session, sessionDate }) => {
           <StandingsTable session={session} />
         </div>
 
+        {/* Conditions row: Weather + Assists + AI Opponents (when CM metadata exists) */}
+        {hasCmMetadata && session.cmMetadata && (
+          <>
+            <div className="bento-item-4">
+              <WeatherCard metadata={session.cmMetadata} />
+            </div>
+            {hasAssists && session.cmMetadata.assists && (
+              <div className="bento-item-4">
+                <AssistsGaugeCluster assists={session.cmMetadata.assists} />
+              </div>
+            )}
+            {hasAiOpponents && (
+              <div className="bento-item-4">
+                <AiOpponentsBar metadata={session.cmMetadata} />
+              </div>
+            )}
+          </>
+        )}
+
         {/* Status Donut (1/3) */}
         <div className="bento-item-4">
           <FinishStatusDonut session={session} />
@@ -116,9 +143,14 @@ export const SessionDashboard: React.FC<Props> = ({ session, sessionDate }) => {
           <GapToLeaderChart session={session} />
         </div>
 
-        {/* Sector Comparison (Full width) */}
-        <div className="bento-item-12">
+        {/* Sector Comparison (Half width) */}
+        <div className="bento-item-6">
           <SectorComparisonChart session={session} />
+        </div>
+
+        {/* Consistency Radar (Half width) */}
+        <div className="bento-item-6">
+          <ConsistencyRadar session={session} />
         </div>
 
         {/* AI Data Analysis */}
@@ -136,3 +168,4 @@ export const SessionDashboard: React.FC<Props> = ({ session, sessionDate }) => {
     </div>
   );
 };
+
