@@ -23,7 +23,8 @@ export const AppShell: React.FC<Props> = ({ children }) => {
             </button>
           )}
           <span className="logo" onClick={() => setView('home')} style={{ cursor: 'pointer' }}>
-            🏁 AC Results Analyzer
+            <div className="logo-icon">AC</div>
+            <span>Results Analyzer</span>
           </span>
           {totalSessions > 0 && (
             <span className="session-count">{totalSessions}</span>
@@ -39,7 +40,7 @@ export const AppShell: React.FC<Props> = ({ children }) => {
             </button>
           )}
           {totalSessions > 0 && (
-            <button className="btn btn-sm" onClick={clearAll} style={{ color: 'var(--color-slower)' }}>
+            <button className="btn btn-sm btn-ghost btn-danger" onClick={clearAll}>
               <Trash2 size={14} />
               {es.home.clearAll}
             </button>

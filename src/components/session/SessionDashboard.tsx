@@ -84,36 +84,54 @@ export const SessionDashboard: React.FC<Props> = ({ session, sessionDate }) => {
         </div>
       </div>
 
-      {/* ALL charts in one scrollable view */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-lg)' }}>
-        {/* Standings Table */}
-        <StandingsTable session={session} />
+      {/* Bento Box Grid for Charts & Data */}
+      <div className="bento-grid">
+        {/* Standings Table (Full width) */}
+        <div className="bento-item-12">
+          <StandingsTable session={session} />
+        </div>
 
-        {/* Row: Status donut + Tyre strategy */}
-        <div className="charts-grid">
+        {/* Status Donut (1/3) */}
+        <div className="bento-item-4">
           <FinishStatusDonut session={session} />
+        </div>
+
+        {/* Tyre Strategy (2/3) */}
+        <div className="bento-item-8">
           <TyreStrategyTimeline session={session} />
         </div>
 
-        {/* Lap Times Evolution */}
-        <LapTimesChart session={session} />
+        {/* Lap Times Evolution (Full width) */}
+        <div className="bento-item-12">
+          <LapTimesChart session={session} />
+        </div>
 
-        {/* Row: Position + Gap */}
-        <div className="charts-grid">
+        {/* Position Chart (Half width) */}
+        <div className="bento-item-6">
           <PositionChart session={session} />
+        </div>
+
+        {/* Gap To Leader (Half width) */}
+        <div className="bento-item-6">
           <GapToLeaderChart session={session} />
         </div>
 
-        {/* Sector Comparison */}
-        <SectorComparisonChart session={session} />
+        {/* Sector Comparison (Full width) */}
+        <div className="bento-item-12">
+          <SectorComparisonChart session={session} />
+        </div>
+
+        {/* AI Data Analysis */}
+        <div className="bento-item-12">
+          <DataAnalysis session={session} />
+        </div>
 
         {/* Telemetry — detailed lap-by-lap for each participant */}
         {session.participants.slice(0, 4).map((p, i) => (
-          <TelemetryTable key={i} session={session} participant={p} />
+          <div key={i} className="bento-item-12">
+            <TelemetryTable session={session} participant={p} />
+          </div>
         ))}
-
-        {/* AI Data Analysis */}
-        <DataAnalysis session={session} />
       </div>
     </div>
   );
