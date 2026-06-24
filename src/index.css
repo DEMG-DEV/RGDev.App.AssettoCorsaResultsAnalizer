@@ -6,14 +6,14 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&family=Outfit:wght@600;700;800&display=swap');
 
 /* === CSS Custom Properties (Design Tokens) === */
-/* Default theme: Ferrari 🐎 Rosso Corsa */
+/* Default theme: Ferrari 🐎 Rosso Corsa — Pantone 185 C */
 :root,
 [data-theme="ferrari"] {
-  /* Brand identity */
-  --brand-primary: #DC0000;
+  /* Brand identity — Pantone 185 C (#E4002B) */
+  --brand-primary: #E4002B;
   --brand-secondary: #FFD700;
-  --brand-accent: #FF4136;
-  --brand-glow: rgba(220, 0, 0, 0.35);
+  --brand-accent: #E4002B;
+  --brand-glow: rgba(228, 0, 43, 0.25);
 
   /* Position colors */
   --color-p1: #FFD700;
@@ -27,46 +27,46 @@
   --color-s3: #2ECC71;
 
   /* Delta / performance */
-  --color-faster: #00E676;
-  --color-slower: #FF5252;
-  --color-neutral: #78909C;
-  --color-pb: #E040FB;
-  --color-best: #FF4136;
+  --color-faster: #00C853;
+  --color-slower: #D50000;
+  --color-neutral: #607D8B;
+  --color-pb: #D500F9;
+  --color-best: #E4002B;
 
   /* Finish status */
-  --color-finished: #4CAF50;
-  --color-dnf: #FF5722;
-  --color-dq: #F44336;
-  --color-none: #9E9E9E;
+  --color-finished: #2E7D32;
+  --color-dnf: #D84315;
+  --color-dq: #C62828;
+  --color-none: #757575;
 
-  /* Backgrounds — deep red-black */
-  --bg-primary: #0C0507;
-  --bg-secondary: #1A0A0E;
-  --bg-card: #2A0F15;
-  --bg-card-hover: #3A1520;
-  --bg-glass: rgba(42, 15, 21, 0.88);
-  --bg-input: #120608;
-  --border-subtle: rgba(220, 0, 0, 0.12);
-  --border-accent: rgba(220, 0, 0, 0.4);
+  /* Backgrounds — Light & Bright */
+  --bg-primary: #FFFFFF;
+  --bg-secondary: #FDF2F3; /* Very light Rosso Corsa tint */
+  --bg-card: #FFFFFF;
+  --bg-card-hover: #FFF5F6;
+  --bg-glass: rgba(255, 255, 255, 0.88);
+  --bg-input: #FFFFFF;
+  --border-subtle: rgba(228, 0, 43, 0.15);
+  --border-accent: rgba(228, 0, 43, 0.4);
 
-  /* Text */
-  --text-primary: #FFF0F0;
-  --text-secondary: #D4A0A0;
-  --text-muted: #8B5E5E;
-  --text-accent: #FF6B6B;
+  /* Text — Dark for light theme */
+  --text-primary: #1A0A0E;
+  --text-secondary: #4A3538;
+  --text-muted: #8B6D71;
+  --text-accent: #E4002B;
 
   /* Gradients */
-  --gradient-racing: linear-gradient(135deg, #DC0000 0%, #8B0000 100%);
-  --gradient-fire: linear-gradient(135deg, #FF4136 0%, #FFD700 100%);
-  --gradient-ocean: linear-gradient(135deg, #DC0000 0%, #FF6B6B 100%);
-  --gradient-gold: linear-gradient(135deg, #FFD700 0%, #FF8C00 100%);
-  --gradient-card: linear-gradient(145deg, rgba(220, 0, 0, 0.06), rgba(255, 215, 0, 0.02));
+  --gradient-racing: linear-gradient(135deg, #E4002B 0%, #B70022 100%);
+  --gradient-fire: linear-gradient(135deg, #FF2D2B 0%, #FFB300 100%);
+  --gradient-ocean: linear-gradient(135deg, #E4002B 0%, #FF5252 100%);
+  --gradient-gold: linear-gradient(135deg, #FFB300 0%, #F57C00 100%);
+  --gradient-card: linear-gradient(145deg, rgba(228, 0, 43, 0.03), rgba(255, 215, 0, 0.01));
 
   /* Shadows */
-  --shadow-glow-blue: 0 0 20px rgba(220, 0, 0, 0.3);
-  --shadow-glow-purple: 0 0 20px rgba(220, 0, 0, 0.4);
-  --shadow-card: 0 4px 24px rgba(0, 0, 0, 0.5);
-  --shadow-card-hover: 0 8px 32px rgba(220, 0, 0, 0.15);
+  --shadow-glow-blue: 0 0 20px rgba(228, 0, 43, 0.15);
+  --shadow-glow-purple: 0 0 20px rgba(228, 0, 43, 0.2);
+  --shadow-card: 0 4px 20px rgba(0, 0, 0, 0.06);
+  --shadow-card-hover: 0 8px 32px rgba(228, 0, 43, 0.12);
 
   /* Spacing */
   --space-xs: 4px;
@@ -89,159 +89,170 @@
   --font-display: 'Outfit', 'Inter', sans-serif;
 
   /* Chart driver colors (12 distinct) */
-  --chart-1: #FF4136;
-  --chart-2: #FFD700;
-  --chart-3: #34D399;
-  --chart-4: #60A5FA;
-  --chart-5: #A78BFA;
-  --chart-6: #FB923C;
-  --chart-7: #22D3EE;
-  --chart-8: #F472B6;
-  --chart-9: #4ADE80;
-  --chart-10: #E879F9;
-  --chart-11: #38BDF8;
-  --chart-12: #FCA5A5;
+  --chart-1: #E4002B;
+  --chart-2: #FFB300;
+  --chart-3: #00E676;
+  --chart-4: #2979FF;
+  --chart-5: #651FFF;
+  --chart-6: #FF9100;
+  --chart-7: #00E5FF;
+  --chart-8: #F50057;
+  --chart-9: #00C853;
+  --chart-10: #D500F9;
+  --chart-11: #00B0FF;
+  --chart-12: #FF1744;
 }
 
-/* === Porsche 🏎️ Silver & Guards Red === */
+/* === Porsche 🏎️ 963 WEC — Pantone 1805 C (Porsche Red) + 7402 C (Gold) === */
 [data-theme="porsche"] {
-  --brand-primary: #B5A07C;
-  --brand-secondary: #D4AF37;
-  --brand-accent: #C8102E;
-  --brand-glow: rgba(181, 160, 124, 0.3);
+  --brand-primary: #B12B28;
+  --brand-secondary: #EBD698;
+  --brand-accent: #B12B28;
+  --brand-glow: rgba(177, 43, 40, 0.25);
 
-  --color-best: #D4AF37;
+  --color-best: #B12B28;
 
-  --bg-primary: #08090B;
-  --bg-secondary: #12141A;
-  --bg-card: #1C1F28;
-  --bg-card-hover: #262A36;
-  --bg-glass: rgba(28, 31, 40, 0.88);
-  --bg-input: #0C0D12;
-  --border-subtle: rgba(181, 160, 124, 0.1);
-  --border-accent: rgba(181, 160, 124, 0.35);
+  /* Backgrounds — Light Porsche Red tint */
+  --bg-primary: #FFFFFF;
+  --bg-secondary: #F9F5F4;
+  --bg-card: #FFFFFF;
+  --bg-card-hover: #FDF9F8;
+  --bg-glass: rgba(255, 255, 255, 0.88);
+  --bg-input: #FFFFFF;
+  --border-subtle: rgba(177, 43, 40, 0.15);
+  --border-accent: rgba(177, 43, 40, 0.4);
 
-  --text-primary: #F0EDE6;
-  --text-secondary: #ADA799;
-  --text-muted: #706B60;
-  --text-accent: #D4AF37;
+  /* Text — Dark */
+  --text-primary: #181112;
+  --text-secondary: #4C3A3C;
+  --text-muted: #8C7174;
+  --text-accent: #B12B28;
 
-  --gradient-racing: linear-gradient(135deg, #B5A07C 0%, #7A6840 100%);
-  --gradient-fire: linear-gradient(135deg, #C8102E 0%, #FF5252 100%);
-  --gradient-ocean: linear-gradient(135deg, #B5A07C 0%, #D4AF37 100%);
-  --gradient-gold: linear-gradient(135deg, #D4AF37 0%, #B5A07C 100%);
-  --gradient-card: linear-gradient(145deg, rgba(181, 160, 124, 0.04), rgba(212, 175, 55, 0.02));
+  --gradient-racing: linear-gradient(135deg, #B12B28 0%, #8A2220 100%);
+  --gradient-fire: linear-gradient(135deg, #B12B28 0%, #C49F30 100%);
+  --gradient-ocean: linear-gradient(135deg, #B12B28 0%, #D44440 100%);
+  --gradient-gold: linear-gradient(135deg, #C49F30 0%, #B12B28 100%);
+  --gradient-card: linear-gradient(145deg, rgba(177, 43, 40, 0.03), rgba(235, 214, 152, 0.01));
 
-  --shadow-glow-blue: 0 0 20px rgba(181, 160, 124, 0.2);
-  --shadow-glow-purple: 0 0 20px rgba(212, 175, 55, 0.25);
-  --shadow-card-hover: 0 8px 32px rgba(181, 160, 124, 0.1);
+  --shadow-glow-blue: 0 0 20px rgba(177, 43, 40, 0.15);
+  --shadow-glow-purple: 0 0 20px rgba(235, 214, 152, 0.15);
+  --shadow-card: 0 4px 20px rgba(0, 0, 0, 0.06);
+  --shadow-card-hover: 0 8px 32px rgba(177, 43, 40, 0.1);
 
-  --chart-1: #D4AF37;
-  --chart-2: #C8102E;
-  --chart-3: #B5A07C;
-  --chart-4: #60A5FA;
-  --chart-5: #A78BFA;
-  --chart-6: #8ECAE6;
-  --chart-7: #34D399;
-  --chart-8: #FB923C;
-  --chart-9: #F472B6;
-  --chart-10: #E879F9;
-  --chart-11: #38BDF8;
-  --chart-12: #FCA5A5;
+  --chart-1: #B12B28;
+  --chart-2: #C49F30;
+  --chart-3: #D44440;
+  --chart-4: #2979FF;
+  --chart-5: #651FFF;
+  --chart-6: #00B0FF;
+  --chart-7: #00E676;
+  --chart-8: #FF9100;
+  --chart-9: #F50057;
+  --chart-10: #D500F9;
+  --chart-11: #00E5FF;
+  --chart-12: #FF1744;
 }
 
-/* === Toyota Gazoo Racing 🏁 Red & White === */
+/* === Toyota Gazoo Racing 🏁 GR010 Hybrid — Pantone 186 C === */
 [data-theme="toyota"] {
+  /* Brand — Pantone 186 C (#EB0A1E) ✓ */
   --brand-primary: #EB0A1E;
-  --brand-secondary: #00A1E4;
+  --brand-secondary: #000000;
   --brand-accent: #EB0A1E;
-  --brand-glow: rgba(235, 10, 30, 0.3);
+  --brand-glow: rgba(235, 10, 30, 0.25);
 
-  --color-best: #00A1E4;
+  --color-best: #EB0A1E;
 
-  --bg-primary: #070A0E;
-  --bg-secondary: #0E1318;
-  --bg-card: #151C24;
-  --bg-card-hover: #1E2832;
-  --bg-glass: rgba(21, 28, 36, 0.88);
-  --bg-input: #0A0E14;
-  --border-subtle: rgba(0, 161, 228, 0.1);
-  --border-accent: rgba(0, 161, 228, 0.35);
+  /* Backgrounds — Light bright white/red */
+  --bg-primary: #FFFFFF;
+  --bg-secondary: #FDF4F5;
+  --bg-card: #FFFFFF;
+  --bg-card-hover: #FFF7F8;
+  --bg-glass: rgba(255, 255, 255, 0.88);
+  --bg-input: #FFFFFF;
+  --border-subtle: rgba(235, 10, 30, 0.15);
+  --border-accent: rgba(235, 10, 30, 0.4);
 
-  --text-primary: #EFF4F9;
-  --text-secondary: #8EAFC4;
-  --text-muted: #4D6B80;
-  --text-accent: #00A1E4;
+  /* Text — Dark */
+  --text-primary: #140C0D;
+  --text-secondary: #4D3A3D;
+  --text-muted: #8B6E72;
+  --text-accent: #EB0A1E;
 
-  --gradient-racing: linear-gradient(135deg, #EB0A1E 0%, #8B0000 100%);
-  --gradient-fire: linear-gradient(135deg, #EB0A1E 0%, #FF6B6B 100%);
-  --gradient-ocean: linear-gradient(135deg, #00A1E4 0%, #00D4FF 100%);
-  --gradient-gold: linear-gradient(135deg, #EB0A1E 0%, #00A1E4 100%);
-  --gradient-card: linear-gradient(145deg, rgba(0, 161, 228, 0.04), rgba(235, 10, 30, 0.02));
+  --gradient-racing: linear-gradient(135deg, #EB0A1E 0%, #B80818 100%);
+  --gradient-fire: linear-gradient(135deg, #EB0A1E 0%, #FF3D3D 100%);
+  --gradient-ocean: linear-gradient(135deg, #EB0A1E 0%, #FF6B6B 100%);
+  --gradient-gold: linear-gradient(135deg, #EB0A1E 0%, #FFB300 100%);
+  --gradient-card: linear-gradient(145deg, rgba(235, 10, 30, 0.03), rgba(0, 0, 0, 0.01));
 
-  --shadow-glow-blue: 0 0 20px rgba(0, 161, 228, 0.25);
-  --shadow-glow-purple: 0 0 20px rgba(235, 10, 30, 0.25);
-  --shadow-card-hover: 0 8px 32px rgba(0, 161, 228, 0.1);
+  --shadow-glow-blue: 0 0 20px rgba(235, 10, 30, 0.15);
+  --shadow-glow-purple: 0 0 20px rgba(235, 10, 30, 0.15);
+  --shadow-card: 0 4px 20px rgba(0, 0, 0, 0.06);
+  --shadow-card-hover: 0 8px 32px rgba(235, 10, 30, 0.1);
 
-  --chart-1: #00A1E4;
-  --chart-2: #EB0A1E;
-  --chart-3: #34D399;
-  --chart-4: #FBBF24;
-  --chart-5: #A78BFA;
-  --chart-6: #FB923C;
-  --chart-7: #F472B6;
-  --chart-8: #22D3EE;
-  --chart-9: #4ADE80;
-  --chart-10: #E879F9;
-  --chart-11: #38BDF8;
-  --chart-12: #FCA5A5;
+  --chart-1: #EB0A1E;
+  --chart-2: #FF3D3D;
+  --chart-3: #00E676;
+  --chart-4: #FFB300;
+  --chart-5: #651FFF;
+  --chart-6: #FF9100;
+  --chart-7: #F50057;
+  --chart-8: #00E5FF;
+  --chart-9: #00C853;
+  --chart-10: #D500F9;
+  --chart-11: #00B0FF;
+  --chart-12: #FF1744;
 }
 
-/* === Ford 🇺🇸 Performance Blue & Orange === */
+/* === Ford 🇺🇸 GT Le Mans — Pantone 294 C (Ford Blue) === */
 [data-theme="ford"] {
+  /* Brand — Pantone 294 C (#003478) ✓ */
   --brand-primary: #003478;
   --brand-secondary: #FF6B2B;
-  --brand-accent: #1E90FF;
-  --brand-glow: rgba(0, 52, 120, 0.35);
+  --brand-accent: #003478;
+  --brand-glow: rgba(0, 52, 120, 0.25);
 
   --color-best: #FF6B2B;
 
-  --bg-primary: #050A14;
-  --bg-secondary: #0A1628;
-  --bg-card: #10203A;
-  --bg-card-hover: #182D4E;
-  --bg-glass: rgba(16, 32, 58, 0.88);
-  --bg-input: #071020;
-  --border-subtle: rgba(30, 144, 255, 0.1);
-  --border-accent: rgba(255, 107, 43, 0.35);
+  /* Backgrounds — Light bright blue tint */
+  --bg-primary: #FFFFFF;
+  --bg-secondary: #F4F7FB;
+  --bg-card: #FFFFFF;
+  --bg-card-hover: #F8FBFE;
+  --bg-glass: rgba(255, 255, 255, 0.88);
+  --bg-input: #FFFFFF;
+  --border-subtle: rgba(0, 52, 120, 0.15);
+  --border-accent: rgba(0, 52, 120, 0.4);
 
-  --text-primary: #E8F0FF;
-  --text-secondary: #7DA8D2;
-  --text-muted: #3E6B8F;
-  --text-accent: #FF6B2B;
+  /* Text — Dark */
+  --text-primary: #0A1326;
+  --text-secondary: #364766;
+  --text-muted: #7487A8;
+  --text-accent: #003478;
 
-  --gradient-racing: linear-gradient(135deg, #003478 0%, #001F4D 100%);
-  --gradient-fire: linear-gradient(135deg, #FF6B2B 0%, #FFD700 100%);
-  --gradient-ocean: linear-gradient(135deg, #1E90FF 0%, #00BFFF 100%);
-  --gradient-gold: linear-gradient(135deg, #FF6B2B 0%, #FF8C42 100%);
-  --gradient-card: linear-gradient(145deg, rgba(30, 144, 255, 0.05), rgba(255, 107, 43, 0.02));
+  --gradient-racing: linear-gradient(135deg, #003478 0%, #002252 100%);
+  --gradient-fire: linear-gradient(135deg, #FF6B2B 0%, #FFB300 100%);
+  --gradient-ocean: linear-gradient(135deg, #003478 0%, #1E90FF 100%);
+  --gradient-gold: linear-gradient(135deg, #FF6B2B 0%, #E65C00 100%);
+  --gradient-card: linear-gradient(145deg, rgba(0, 52, 120, 0.03), rgba(255, 107, 43, 0.01));
 
-  --shadow-glow-blue: 0 0 20px rgba(30, 144, 255, 0.25);
-  --shadow-glow-purple: 0 0 20px rgba(255, 107, 43, 0.3);
-  --shadow-card-hover: 0 8px 32px rgba(30, 144, 255, 0.12);
+  --shadow-glow-blue: 0 0 20px rgba(0, 52, 120, 0.15);
+  --shadow-glow-purple: 0 0 20px rgba(255, 107, 43, 0.15);
+  --shadow-card: 0 4px 20px rgba(0, 0, 0, 0.06);
+  --shadow-card-hover: 0 8px 32px rgba(0, 52, 120, 0.1);
 
-  --chart-1: #1E90FF;
+  --chart-1: #003478;
   --chart-2: #FF6B2B;
-  --chart-3: #FFD700;
-  --chart-4: #34D399;
-  --chart-5: #A78BFA;
-  --chart-6: #F472B6;
-  --chart-7: #22D3EE;
-  --chart-8: #FB923C;
-  --chart-9: #4ADE80;
-  --chart-10: #E879F9;
-  --chart-11: #38BDF8;
-  --chart-12: #FCA5A5;
+  --chart-3: #FFB300;
+  --chart-4: #00E676;
+  --chart-5: #651FFF;
+  --chart-6: #F50057;
+  --chart-7: #00E5FF;
+  --chart-8: #FF9100;
+  --chart-9: #00C853;
+  --chart-10: #D500F9;
+  --chart-11: #00B0FF;
+  --chart-12: #FF1744;
 }
 
 /* === Reset & Base === */
@@ -654,13 +665,13 @@ h3 { font-size: 1.15rem; }
 
 .tab:hover {
   color: var(--text-primary);
-  background: rgba(255, 255, 255, 0.05);
+  background: rgba(0, 0, 0, 0.05);
 }
 
 .tab.active {
   color: var(--text-primary);
   background: var(--bg-card);
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
 /* === Charts Grid === */
@@ -905,13 +916,13 @@ h3 { font-size: 1.15rem; }
 }
 
 .theme-picker .theme-btn[data-brand="ferrari"] {
-  background: linear-gradient(135deg, #DC0000, #FFD700);
+  background: linear-gradient(135deg, #E4002B, #FFD700);
 }
 .theme-picker .theme-btn[data-brand="porsche"] {
-  background: linear-gradient(135deg, #B5A07C, #D4AF37);
+  background: linear-gradient(135deg, #B12B28, #EBD698);
 }
 .theme-picker .theme-btn[data-brand="toyota"] {
-  background: linear-gradient(135deg, #EB0A1E, #00A1E4);
+  background: linear-gradient(135deg, #EB0A1E, #1A0A0E);
 }
 .theme-picker .theme-btn[data-brand="ford"] {
   background: linear-gradient(135deg, #003478, #FF6B2B);

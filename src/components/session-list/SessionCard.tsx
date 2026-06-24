@@ -1,5 +1,5 @@
-import React, { useMemo } from 'react';
-import { Clock, Users, Flag, Gauge, Trophy, Car } from 'lucide-react';
+import React from 'react';
+import { Clock, Users, Flag, Gauge } from 'lucide-react';
 import type { Session } from '../../core/models/types';
 import { humanizeTrackName, humanizeCarId } from '../../core/utils/car-name-humanizer';
 import { formatLapTime, formatSessionDate } from '../../core/utils/time-formatter';
@@ -29,15 +29,7 @@ export const SessionCard: React.FC<Props> = ({ session, sessionDate }) => {
   // Top 3 drivers
   const podium = session.participants.slice(0, 3);
 
-  // Unique cars used
-  const uniqueCars = useMemo(() => {
-    const cars = new Set(session.participants.map(p => p.vehicle.modelId));
-    return Array.from(cars);
-  }, [session.participants]);
 
-  // Winner info
-  const winner = session.participants[0];
-  const winnerName = winner?.drivers[0]?.name ?? '';
 
   return (
     <div className="card card-clickable session-card animate-in" onClick={() => selectSession(session)}>
@@ -52,33 +44,43 @@ export const SessionCard: React.FC<Props> = ({ session, sessionDate }) => {
         </span>
       </div>
 
-      {/* Top 3 Car Previews */}
+      {/* Podium — car preview + driver name side by side */}
       {podium.length > 0 && (
-        <div style={{ display: 'flex', gap: 6, margin: '8px 0', alignItems: 'center' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 6, margin: '8px 0' }}>
           {podium.map((p, i) => (
-            <div key={i} style={{ position: 'relative' }}>
-              <CarPreviewImage carId={p.vehicle.modelId} skinName={p.vehicle.skin} size={36} showPopover={false} />
-              <div style={{
-                position: 'absolute',
-                top: -4,
-                left: -4,
-                width: 16,
-                height: 16,
-                borderRadius: '50%',
-                background: i === 0 ? 'var(--color-p1)' : i === 1 ? 'var(--color-p2)' : 'var(--color-p3)',
-                color: '#000',
-                fontSize: '0.55rem',
-                fontWeight: 800,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-              }}>
-                {i + 1}
+            <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <div style={{ position: 'relative', flexShrink: 0 }}>
+                <CarPreviewImage carId={p.vehicle.modelId} skinName={p.vehicle.skin} size={36} showPopover={false} />
+                <div style={{
+                  position: 'absolute',
+                  top: -4,
+                  left: -4,
+                  width: 16,
+                  height: 16,
+                  borderRadius: '50%',
+                  background: i === 0 ? 'var(--color-p1)' : i === 1 ? 'var(--color-p2)' : 'var(--color-p3)',
+                  color: '#000',
+                  fontSize: '0.55rem',
+                  fontWeight: 800,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}>
+                  {i + 1}
+                </div>
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+                <span style={{ fontSize: '0.82rem', fontWeight: i === 0 ? 600 : 400, color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                  {p.drivers[0]?.name ?? '—'}
+                </span>
+                <span style={{ fontSize: '0.65rem', color: 'var(--text-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                  {humanizeCarId(p.vehicle.modelId)}
+                </span>
               </div>
             </div>
           ))}
           {session.participants.length > 3 && (
-            <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>
+            <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', paddingLeft: 44 }}>
               +{session.participants.length - 3} más
             </span>
           )}
@@ -103,32 +105,17 @@ export const SessionCard: React.FC<Props> = ({ session, sessionDate }) => {
         </span>
       </div>
 
-      {/* Winner + Best Lap */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 6, gap: 8 }}>
-        {winnerName && (
-          <div style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: '0.78rem' }}>
-            <Trophy size={13} style={{ color: 'var(--color-p1)' }} />
-            <span style={{ color: 'var(--text-primary)', fontWeight: 600 }}>{winnerName}</span>
-          </div>
-        )}
-        {bestLapData && (
-          <span className="stat" style={{ color: 'var(--color-faster)', fontFamily: 'var(--font-mono)', fontSize: '0.82rem', fontWeight: 600 }}>
-            <Gauge size={13} />
+      {/* Best Lap */}
+      {bestLapData && (
+        <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginTop: 6 }}>
+          <Gauge size={13} style={{ color: 'var(--color-faster)' }} />
+          <span style={{ color: 'var(--color-faster)', fontFamily: 'var(--font-mono)', fontSize: '0.82rem', fontWeight: 600 }}>
             {formatLapTime(bestLapData.lap.timeMs)}
-          </span>
-        )}
-      </div>
-
-      {/* Cars used */}
-      {uniqueCars.length > 0 && (
-        <div style={{ display: 'flex', gap: 4, alignItems: 'center', marginTop: 6, flexWrap: 'wrap' }}>
-          <Car size={12} style={{ color: 'var(--text-muted)', flexShrink: 0 }} />
-          <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', lineHeight: 1.3 }}>
-            {uniqueCars.slice(0, 3).map(c => humanizeCarId(c)).join(', ')}
-            {uniqueCars.length > 3 && ` +${uniqueCars.length - 3}`}
           </span>
         </div>
       )}
+
+
 
       {/* Weather + Temperature */}
       {session.cmMetadata?.temperatureAmbient && (
