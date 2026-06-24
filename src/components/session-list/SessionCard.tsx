@@ -1,5 +1,5 @@
-import React from 'react';
-import { Clock, Users, Flag, Gauge } from 'lucide-react';
+import React, { useState } from 'react';
+import { Clock, Users, Flag, Gauge, Trash2 } from 'lucide-react';
 import type { Session } from '../../core/models/types';
 import { humanizeTrackName, humanizeCarId } from '../../core/utils/car-name-humanizer';
 import { formatLapTime, formatSessionDate } from '../../core/utils/time-formatter';
@@ -23,25 +23,69 @@ const TYPE_LABELS: Record<string, string> = {
 
 export const SessionCard: React.FC<Props> = ({ session, sessionDate }) => {
   const selectSession = useSessionStore(s => s.selectSession);
+  const removeSession = useSessionStore(s => s.removeSession);
+  const [showConfirm, setShowConfirm] = useState(false);
   const bestLapData = getSessionBestLap(session);
   const trackName = humanizeTrackName(session.track.venue, session.track.course);
 
   // Top 3 drivers
   const podium = session.participants.slice(0, 3);
 
+  const handleDelete = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setShowConfirm(true);
+  };
 
+  const confirmDelete = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    removeSession(session.id);
+    setShowConfirm(false);
+  };
+
+  const cancelDelete = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setShowConfirm(false);
+  };
 
   return (
     <div className="card card-clickable session-card animate-in" onClick={() => selectSession(session)}>
-      {/* Header: Track + Badge */}
+      {/* Delete confirmation overlay */}
+      {showConfirm && (
+        <div className="session-card-confirm-overlay" onClick={(e) => e.stopPropagation()}>
+          <div className="session-card-confirm-content">
+            <Trash2 size={24} />
+            <p>{es.home.deleteConfirm}</p>
+            <div className="session-card-confirm-actions">
+              <button className="btn btn-sm" onClick={cancelDelete}>
+                {es.common.back}
+              </button>
+              <button className="btn btn-sm btn-danger-solid" onClick={confirmDelete}>
+                {es.home.deleteSession}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Header: Track + Badge + Delete */}
       <div className="header">
         <div>
           <div className="track-name">{trackName}</div>
           {session.name && <div style={{ color: 'var(--text-secondary)', fontSize: '0.82rem' }}>{session.name}</div>}
         </div>
-        <span className={`badge badge-${session.type}`}>
-          {TYPE_LABELS[session.type] ?? session.type}
-        </span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+          <span className={`badge badge-${session.type}`}>
+            {TYPE_LABELS[session.type] ?? session.type}
+          </span>
+          <button
+            className="btn-delete-session"
+            onClick={handleDelete}
+            title={es.home.deleteSession}
+            aria-label={es.home.deleteSession}
+          >
+            <Trash2 size={14} />
+          </button>
+        </div>
       </div>
 
       {/* Podium — car preview + driver name side by side */}
@@ -114,8 +158,6 @@ export const SessionCard: React.FC<Props> = ({ session, sessionDate }) => {
           </span>
         </div>
       )}
-
-
 
       {/* Weather + Temperature */}
       {session.cmMetadata?.temperatureAmbient && (

@@ -29,6 +29,7 @@ interface SessionStore {
   addResults: (newResults: ParseResult[]) => void;
   selectSession: (session: Session) => void;
   selectDriver: (index: number | null) => void;
+  removeSession: (sessionId: string) => void;
   setAcRootConfigured: (configured: boolean) => void;
   setLoading: (loading: boolean) => void;
   setLoadingProgress: (current: number, total: number) => void;
@@ -74,6 +75,26 @@ export const useSessionStore = create<SessionStore>((set, get) => ({
     set({
       selectedDriverIndex: index,
       view: index !== null ? 'driver' : 'session',
+    }),
+
+  removeSession: (sessionId) =>
+    set((state) => {
+      // Filter the session out of every ParseResult
+      const updatedResults = state.results
+        .map((r) => ({
+          ...r,
+          sessions: r.sessions.filter((s) => s.id !== sessionId),
+        }))
+        .filter((r) => r.sessions.length > 0); // drop empty results
+
+      // If the deleted session was currently selected, go back home
+      const wasSelected = state.selectedSession?.id === sessionId;
+      return {
+        results: updatedResults,
+        ...(wasSelected
+          ? { selectedSession: null, selectedDriverIndex: null, view: 'home' as const }
+          : {}),
+      };
     }),
 
   setAcRootConfigured: (configured) =>

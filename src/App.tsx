@@ -51,7 +51,10 @@ const App: React.FC = () => {
 
   // Flatten all sessions with their dates — sorted newest first
   const allSessions = results
-    .flatMap(r => r.sessions.map(s => ({ session: s, date: r.sessionDate })))
+    .flatMap(r => r.sessions.map(s => ({
+      session: s,
+      date: r.sessionDate ?? s.cmMetadata?.sessionDate,
+    })))
     .sort((a, b) => (b.date?.getTime() ?? 0) - (a.date?.getTime() ?? 0));
 
   return (

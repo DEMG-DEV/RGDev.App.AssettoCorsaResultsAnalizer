@@ -23,6 +23,8 @@ export const es = {
     noSessions: 'No se encontraron sesiones',
     viewHistory: 'Ver historial completo',
     clearAll: 'Limpiar todo',
+    deleteSession: 'Eliminar sesión',
+    deleteConfirm: '¿Estás seguro de que deseas eliminar esta sesión? Esta acción no se puede deshacer.',
   },
   session: {
     standings: 'Clasificación',
