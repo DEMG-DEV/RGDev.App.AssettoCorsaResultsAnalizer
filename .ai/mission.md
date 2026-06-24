@@ -81,6 +81,11 @@ However, there is **no built-in tool to browse, analyze, or compare** these save
    - Weather conditions and track state
    - Assist settings used
    - Session configuration (penalties, jump start rules, etc.)
+6. **Car preview images (local PC)**: When AC is installed on the same PC, auto-discover and display:
+   - `preview.jpg` — high-quality 3D renders of each car with its exact skin (from `{AC_ROOT}/content/cars/{car_id}/skins/{skin_name}/preview.jpg`)
+   - `livery.png` — small livery thumbnails for inline badges
+   - `ui_car.json` — human-readable car names, brand, class, year, power (instead of raw IDs like `ks_toyota_gt86`)
+   - Graceful fallback to styled placeholders when AC is not installed (mobile/remote web)
 
 ## Supported JSON Formats
 

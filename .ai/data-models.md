@@ -321,6 +321,10 @@ interface Vehicle {
   ballastKg: number;
   /** Restrictor value (0 = none) */
   restrictor: number;
+  /** Local path or data URL to car preview image (auto-discovered) */
+  previewImageUrl?: string;
+  /** Local path or data URL to livery thumbnail (auto-discovered) */
+  liveryImageUrl?: string;
 }
 
 /** Finish status of a participant */
@@ -375,7 +379,7 @@ interface Server {
 }
 
 /** Session types */
-type SessionType = 'practice' | 'qualify' | 'warmup' | 'race';
+type SessionType = 'practice' | 'qualify' | 'warmup' | 'race' | 'hotlap';
 
 /** An incident / collision event */
 interface Incident {
@@ -434,6 +438,102 @@ interface ParseResult {
 }
 ```
 
+---
+
+## Car Preview Image Discovery (Local PC Only)
+
+When the app runs on the same PC where Assetto Corsa is installed, it can **auto-discover** and display the actual rendered preview images of each car+skin combo. These are high-quality 3D renders already present on disk.
+
+### File Structure on Disk
+
+```
+{AC_ROOT}/content/cars/{car_id}/
+├── {car_id}.kn5              # 3D model (NOT used)
+├── data/                     # Car physics data
+├── skins/
+│   ├── {skin_name}/
+│   │   ├── preview.jpg       # ← HIGH-RES car render (≈640x480, ~140KB)
+│   │   ├── livery.png        # ← Small livery thumbnail (≈64x64, ~20KB)
+│   │   ├── ui_skin.json      # Skin metadata
+│   │   └── ...               # Textures (dds, etc.)
+│   └── {other_skin}/
+│       └── ...
+└── ui/
+    └── ui_car.json           # Car display name, brand, year, description, tags
+```
+
+### AC Installation Discovery Algorithm
+
+The app must auto-detect where Assetto Corsa is installed. Discovery priority:
+
+| Priority | Method | Path |
+|----------|--------|------|
+| 1 | **Steam Registry** (Windows) | `HKCU\SOFTWARE\Valve\Steam → SteamPath` then parse `libraryfolders.vdf` for AC app ID `244210` |
+| 2 | **Common Steam paths** | `D:\SteamLibrary\steamapps\common\assettocorsa\`, `C:\Program Files (x86)\Steam\steamapps\common\assettocorsa\`, etc. |
+| 3 | **User-configured path** | Settings → manually set AC root folder |
+| 4 | **Content Manager registry** | Read CM config for AC path if CM is installed |
+
+### Image Resolution Logic
+
+For each participant in parsed results:
+
+```typescript
+/**
+ * Resolves the preview image path for a car + skin combination.
+ * Falls back gracefully if skin or car folder is not found.
+ */
+function resolveCarPreview(acRoot: string, carId: string, skinName?: string): CarImages {
+  // 1. Try exact skin preview
+  //    → {acRoot}/content/cars/{carId}/skins/{skinName}/preview.jpg
+  
+  // 2. Fallback: first available skin preview
+  //    → {acRoot}/content/cars/{carId}/skins/*/preview.jpg (first found)
+  
+  // 3. Fallback: car badge/icon from ui folder
+  //    → {acRoot}/content/cars/{carId}/ui/badge.png
+  
+  // 4. Final fallback: generic car placeholder
+  //    → embedded default car silhouette SVG
+}
+
+interface CarImages {
+  /** Full car render with specific skin (~640x480) */
+  previewUrl: string | null;
+  /** Small livery thumbnail (~64x64) */
+  liveryUrl: string | null;
+  /** Whether images came from local AC install */
+  isLocalAsset: boolean;
+}
+```
+
+### Platform Behavior
+
+| Platform | Preview Images Available? | Method |
+|----------|--------------------------|--------|
+| **Desktop (Tauri)** | ✅ Yes — auto-discover AC folder | Native file system access via Tauri API |
+| **Web (same PC)** | ⚠️ Limited — File System Access API (Chrome/Edge only) | User grants folder access once, app caches |
+| **Web (remote/mobile)** | ❌ No — AC not installed | Show placeholder silhouettes or generic car icons |
+
+### Extra: `ui_car.json` Metadata
+
+Each car also has a `ui/ui_car.json` with human-readable info:
+```json
+{
+  "name": "Toyota GT86",
+  "brand": "Toyota",
+  "class": "street",
+  "tags": ["street", "japan", "rwd"],
+  "year": 2015,
+  "description": "...",
+  "bhp": "200bhp",
+  "torque": "205Nm",
+  "weight": "1240kg"
+}
+```
+This can be used for **car display names** (instead of raw IDs like `ks_toyota_gt86`) and grouping/filtering.
+
+---
+
 ## Data Flow
 
 ```
@@ -448,20 +548,23 @@ interface ParseResult {
                                                    │  (ParseResult)   │
                                                    └──────────────────┘
                                                             │
-                                                            ▼
-                                                   ┌──────────────────┐
-                                                   │  Analyzers       │
-                                                   │  (stats, gaps)   │
-                                                   └──────────────────┘
-                                                            │
-                                                            ▼
-                                                   ┌──────────────────┐
-                                                   │  Store (Zustand) │
-                                                   └──────────────────┘
-                                                            │
-                                                            ▼
-                                                   ┌──────────────────┐
-                                                   │  UI Components   │
-                                                   │  (React)         │
-                                                   └──────────────────┘
+                                          ┌─────────────────┤
+                                          ▼                 ▼
+                                 ┌──────────────────┐  ┌───────────────────┐
+                                 │  Analyzers       │  │  Car Asset Svc    │
+                                 │  (stats, gaps)   │  │  (preview.jpg     │
+                                 └──────────────────┘  │   livery.png      │
+                                          │            │   ui_car.json)    │
+                                          │            └───────────────────┘
+                                          │                 │
+                                          ▼                 ▼
+                                 ┌──────────────────────────────┐
+                                 │         Store (Zustand)      │
+                                 └──────────────────────────────┘
+                                                │
+                                                ▼
+                                 ┌──────────────────────────────┐
+                                 │     UI Components (React)    │
+                                 │     🖼️ Car previews shown    │
+                                 └──────────────────────────────┘
 ```

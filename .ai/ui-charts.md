@@ -99,13 +99,14 @@ The Assetto Corsa Results Analyzer is a **visual-first application**. Every scre
 **Type**: Interactive data table with embedded graphics
 - **Position column**: Large badge with P1=gold, P2=silver, P3=bronze gradient backgrounds, rest=muted
 - **Driver column**: Name + nationality flag emoji (from CM `__raceIni` NATION_CODE)
-- **Car column**: Car model name + small colored dot for visual grouping by car
+- **Car column**: Car `preview.jpg` thumbnail (48px circle crop) + model name — auto-loaded from AC install folder. Hover shows full `preview.jpg` in a popover (640x480 render)
+- **Livery badge**: Small `livery.png` (24px) next to car name for quick visual ID
 - **Best Lap column**: Time in monospace + green highlight if session best
 - **Total Time column**: Time with gap to leader shown as `+X.XXXs` in green/red
 - **Laps column**: Number + mini progress bar showing completion %
 - **Sparkline column**: Tiny inline line chart of their lap times (50px wide)
 - **Status column**: Colored pill badge — ✅ Finished / ❌ DNF / 🚫 DQ
-- **Expandable row**: Click to reveal full lap-by-lap table with sector colors
+- **Expandable row**: Click to reveal full lap-by-lap table with sector colors + full car preview image
 
 ### 3. 📈 LAP TIMES EVOLUTION CHART
 **Type**: Multi-line chart (Recharts `LineChart`)
@@ -287,7 +288,59 @@ The Assetto Corsa Results Analyzer is a **visual-first application**. Every scre
 
 ### Mobile-Specific Adaptations
 - Charts use touch-optimized tooltips (tap instead of hover)
-- Standings table becomes card-based layout (one card per driver)
+- Standings table becomes card-based layout (one card per driver) — car preview as card header image
 - Sector comparison becomes horizontal scrollable
 - Tab navigation for switching between chart categories
 - Pull-to-refresh for file scanning
+
+---
+
+## Car Preview Images — Auto-Discovery from AC Install
+
+> When the app runs on the same PC where Assetto Corsa is installed, it **automatically finds** and displays the rendered preview images for each car+skin combination. This makes the app feel premium and deeply integrated.
+
+### Where the images live
+
+```
+{AC_ROOT}/content/cars/{car_id}/skins/{skin_name}/preview.jpg   → Full 3D render (~640x480)
+{AC_ROOT}/content/cars/{car_id}/skins/{skin_name}/livery.png    → Livery thumbnail (~64x64)
+```
+
+The `car_id` and `skin_name` map **directly** from the JSON result fields:
+- AC Client format: `players[].car` → `car_id`, `players[].skin` → `skin_name`
+- AC Server format: `Cars[].Model` → `car_id`, `Cars[].Skin` → `skin_name`
+
+### How previews are used in the UI
+
+| Location | Image Used | Size | Behavior |
+|----------|-----------|------|----------|
+| Standings table car column | `preview.jpg` | 48px circle crop | Hover → full preview popover |
+| Standings table livery badge | `livery.png` | 24px inline | Visual car identification |
+| Driver detail view header | `preview.jpg` | Full width (~640px) | Hero banner for driver card |
+| Car usage distribution chart | `preview.jpg` | 80px thumbnails | Below each bar/segment |
+| Session overview grid | `livery.png` | 32px per car | Show car variety at a glance |
+| Multi-session car history | `preview.jpg` | 120px grid | Gallery of cars driven over time |
+
+### Fallback behavior (AC NOT installed or mobile/remote)
+
+```
+1. Exact skin preview.jpg → found? ✅ Use it
+2. Any skin preview.jpg → found? ✅ Use first available
+3. Car badge.png from ui/ → found? ✅ Use it
+4. Nothing found → 🎨 Show styled placeholder:
+   - Dark card with car model ID as text
+   - Gradient background matching car brand color
+   - Generic car silhouette SVG icon
+   - Never show broken image icons ❌
+```
+
+### Car name resolution
+
+Raw IDs like `ks_toyota_gt86` are ugly. When AC is available, read `ui/ui_car.json` for:
+- **Display name**: "Toyota GT86" (instead of `ks_toyota_gt86`)
+- **Brand**: "Toyota" (for grouping)
+- **Class**: "street" / "race" / "gt3" etc.
+- **Year**: 2015
+- **Power**: "200bhp"
+
+If `ui_car.json` is not available, humanize the ID: `ks_toyota_gt86` → `Toyota Gt86`
