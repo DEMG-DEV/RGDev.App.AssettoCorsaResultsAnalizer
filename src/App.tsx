@@ -79,16 +79,21 @@ const App: React.FC = () => {
       {/* Home View */}
       {view === 'home' && !isLoading && (
         <>
-          <div style={{ textAlign: 'center', marginBottom: 'var(--space-xl)' }}>
-            <h1 style={{ fontSize: '2.5rem', marginBottom: 'var(--space-sm)' }}>
-              <span style={{ background: 'var(--gradient-racing)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
-                {es.app.subtitle}
-              </span>
-            </h1>
-            <p className="text-secondary">{es.home.description}</p>
-          </div>
+          {/* Show setup UI only if no sessions loaded yet */}
+          {allSessions.length === 0 && (
+            <>
+              <div style={{ textAlign: 'center', marginBottom: 'var(--space-xl)' }}>
+                <h1 style={{ fontSize: '2.5rem', marginBottom: 'var(--space-sm)' }}>
+                  <span style={{ background: 'var(--gradient-racing)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
+                    {es.app.subtitle}
+                  </span>
+                </h1>
+                <p className="text-secondary">{es.home.description}</p>
+              </div>
 
-          <FileDropZone />
+              <FileDropZone />
+            </>
+          )}
 
           {allSessions.length > 0 && (
             <div style={{ marginTop: 'var(--space-2xl)' }}>
