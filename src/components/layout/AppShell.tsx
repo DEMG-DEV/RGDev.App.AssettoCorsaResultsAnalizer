@@ -1,7 +1,8 @@
 import React from 'react';
-import { ArrowLeft, Trash2, BarChart3 } from 'lucide-react';
+import { ArrowLeft, Trash2, BarChart3, Radio } from 'lucide-react';
 import { useSessionStore } from '../../stores/session-store';
 import { ThemePicker } from '../shared/ThemePicker';
+import { isTauriEnvironment } from '../../services/telemetry-service';
 import { es } from '../../i18n/es';
 
 interface Props {
@@ -12,6 +13,7 @@ export const AppShell: React.FC<Props> = ({ children }) => {
   const { view, results, goBack, clearAll, setView } = useSessionStore();
   const totalSessions = results.reduce((s, r) => s + r.sessions.length, 0);
   const canGoBack = view !== 'home';
+  const isTauri = isTauriEnvironment();
 
   return (
     <div className="app-shell">
@@ -31,6 +33,17 @@ export const AppShell: React.FC<Props> = ({ children }) => {
           )}
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-md)' }}>
+          {/* Live Telemetry button — only in Tauri */}
+          {isTauri && view !== 'telemetry' && (
+            <button
+              className="btn btn-sm btn-telemetry"
+              onClick={() => setView('telemetry')}
+              title={es.telemetry.title}
+            >
+              <Radio size={14} />
+              {es.telemetry.liveButton}
+            </button>
+          )}
           <ThemePicker />
           <div style={{ width: 1, height: 20, background: 'var(--border-subtle)' }} />
           {totalSessions > 1 && view !== 'history' && (

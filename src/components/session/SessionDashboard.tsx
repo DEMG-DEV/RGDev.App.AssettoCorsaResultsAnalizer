@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useCallback } from 'react';
 import type { Session } from '../../core/models/types';
 import { humanizeTrackName } from '../../core/utils/car-name-humanizer';
 import { formatLapTime, formatSessionDate } from '../../core/utils/time-formatter';
@@ -16,6 +16,10 @@ import { ConsistencyRadar } from '../charts/ConsistencyRadar';
 import { WeatherCard } from '../charts/WeatherCard';
 import { AssistsGaugeCluster } from '../charts/AssistsGaugeCluster';
 import { AiOpponentsBar } from '../charts/AiOpponentsBar';
+import { TelemetryCharts } from '../charts/TelemetryCharts';
+import { TelemetrySessionPicker } from '../telemetry/TelemetrySessionPicker';
+import { readTelemetrySession, isTauriEnvironment } from '../../services/telemetry-service';
+import type { TelemetrySessionInfo, TelemetrySessionData } from '../../core/models/telemetry-types';
 import { es } from '../../i18n/es';
 
 interface Props {
@@ -38,6 +42,32 @@ export const SessionDashboard: React.FC<Props> = ({ session, sessionDate }) => {
   const hasCmMetadata = !!session.cmMetadata;
   const hasAssists = !!session.cmMetadata?.assists;
   const hasAiOpponents = session.cmMetadata?.carMetadata && session.cmMetadata.carMetadata.size > 0;
+
+  const isTauri = isTauriEnvironment();
+
+  // Telemetry analysis state
+  const [selectedTelemetryFile, setSelectedTelemetryFile] = useState<string | null>(null);
+  const [telemetryData, setTelemetryData] = useState<TelemetrySessionData | null>(null);
+  const [telemetryLoading, setTelemetryLoading] = useState(false);
+
+  const handleSelectTelemetrySession = useCallback(async (info: TelemetrySessionInfo) => {
+    if (info.fileName === selectedTelemetryFile && telemetryData) {
+      // Already loaded — deselect
+      setSelectedTelemetryFile(null);
+      setTelemetryData(null);
+      return;
+    }
+
+    setSelectedTelemetryFile(info.fileName);
+    setTelemetryLoading(true);
+    try {
+      const data = await readTelemetrySession(info.fileName);
+      setTelemetryData(data);
+    } catch {
+      setTelemetryData(null);
+    }
+    setTelemetryLoading(false);
+  }, [selectedTelemetryFile, telemetryData]);
 
   return (
     <div className="animate-in">
@@ -164,8 +194,42 @@ export const SessionDashboard: React.FC<Props> = ({ session, sessionDate }) => {
             <TelemetryTable session={session} participant={p} />
           </div>
         ))}
+
+        {/* ═══════════════════════════════════════════════════════════
+            Telemetry Analysis Section — Professional telemetry charts
+            Only available in Tauri (desktop) mode
+            ═══════════════════════════════════════════════════════════ */}
+        {isTauri && (
+          <div className="bento-item-12">
+            <div className="telemetry-analysis-section">
+              <div className="telemetry-analysis-header">
+                <div>
+                  <h3>📊 {es.telemetry.analysisTitle}</h3>
+                  <p className="text-secondary" style={{ fontSize: '0.85rem', marginTop: 4 }}>
+                    {es.telemetry.analysisDescription}
+                  </p>
+                </div>
+              </div>
+
+              <TelemetrySessionPicker
+                onSelectSession={handleSelectTelemetrySession}
+                selectedFileName={selectedTelemetryFile}
+              />
+
+              {telemetryLoading && (
+                <div className="telemetry-charts-loading">
+                  <div className="loading-spinner" />
+                  <span>{es.telemetry.loadingTelemetry}</span>
+                </div>
+              )}
+
+              {telemetryData && !telemetryLoading && (
+                <TelemetryCharts data={telemetryData} />
+              )}
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
 };
-

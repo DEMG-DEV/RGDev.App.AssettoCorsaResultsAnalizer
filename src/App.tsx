@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useCallback } from 'react';
 import { useSessionStore } from './stores/session-store';
 import { AppShell } from './components/layout/AppShell';
 import { FileDropZone } from './components/file-input/FileDropZone';
@@ -6,48 +6,58 @@ import { SessionCard } from './components/session-list/SessionCard';
 import { SessionDashboard } from './components/session/SessionDashboard';
 import { DriverDetailView } from './components/driver/DriverDetailView';
 import { HistoryDashboard } from './components/history/HistoryDashboard';
+import { LiveTelemetryDashboard } from './components/telemetry/LiveTelemetryDashboard';
 import { checkLocalStatus, autoLoadCmSessions } from './services/auto-setup';
 import { setAcAvailable } from './services/car-asset-service';
+import { RefreshCw } from 'lucide-react';
 import { es } from './i18n/es';
 
 const App: React.FC = () => {
   const { view, results, selectedSession, selectedDriverIndex, isLoading, loadingProgress } = useSessionStore();
   const { addResults, setAcRootConfigured, setLoading, setLoadingProgress } = useSessionStore();
+  const clearAll = useSessionStore((s) => s.clearAll);
   const didAutoLoad = useRef(false);
+
+  /** Reusable function to load/reload CM sessions */
+  const loadSessions = useCallback(async () => {
+    // 1. Check what the server found
+    const status = await checkLocalStatus();
+
+    // 2. If AC folder found, enable car previews
+    if (status.acFound) {
+      setAcAvailable(true);
+      setAcRootConfigured(true);
+    }
+
+    // 3. If CM sessions found, load them
+    if (status.cmFound) {
+      setLoading(true);
+      try {
+        const cmResults = await autoLoadCmSessions((current, total) => {
+          setLoadingProgress(current, total);
+        });
+        if (cmResults.length > 0) {
+          addResults(cmResults);
+        }
+      } finally {
+        setLoading(false);
+      }
+    }
+  }, [addResults, setAcRootConfigured, setLoading, setLoadingProgress]);
 
   // Auto-load CM sessions and detect AC folder on mount
   useEffect(() => {
     if (didAutoLoad.current) return;
     didAutoLoad.current = true;
+    loadSessions();
+  }, [loadSessions]);
 
-    const autoLoad = async () => {
-      // 1. Check what the server found
-      const status = await checkLocalStatus();
-
-      // 2. If AC folder found, enable car previews
-      if (status.acFound) {
-        setAcAvailable(true);
-        setAcRootConfigured(true);
-      }
-
-      // 3. If CM sessions found, auto-load them
-      if (status.cmFound) {
-        setLoading(true);
-        try {
-          const cmResults = await autoLoadCmSessions((current, total) => {
-            setLoadingProgress(current, total);
-          });
-          if (cmResults.length > 0) {
-            addResults(cmResults);
-          }
-        } finally {
-          setLoading(false);
-        }
-      }
-    };
-
-    autoLoad();
-  }, [addResults, setAcRootConfigured, setLoading, setLoadingProgress]);
+  /** Reload sessions — clears existing and re-loads */
+  const handleReload = useCallback(async () => {
+    if (isLoading) return;
+    clearAll();
+    await loadSessions();
+  }, [isLoading, clearAll, loadSessions]);
 
   // Flatten all sessions with their dates — sorted newest first
   const allSessions = results
@@ -104,6 +114,15 @@ const App: React.FC = () => {
                 <h2>
                   {es.home.sessionsLoaded.replace('{count}', String(allSessions.length))}
                 </h2>
+                <button
+                  className="btn btn-sm btn-ghost"
+                  onClick={handleReload}
+                  disabled={isLoading}
+                  title={es.telemetry.reloadSessions}
+                >
+                  <RefreshCw size={14} className={isLoading ? 'spin' : ''} />
+                  {es.telemetry.reloadSessions}
+                </button>
               </div>
               <div className="session-grid">
                 {allSessions.map((item, i) => (
@@ -140,6 +159,11 @@ const App: React.FC = () => {
       {/* History View */}
       {view === 'history' && (
         <HistoryDashboard />
+      )}
+
+      {/* Telemetry View */}
+      {view === 'telemetry' && (
+        <LiveTelemetryDashboard />
       )}
     </AppShell>
   );

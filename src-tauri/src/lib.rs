@@ -2,6 +2,13 @@ use base64::Engine;
 use serde::Serialize;
 use std::fs;
 use std::path::{Path, PathBuf};
+use std::sync::Arc;
+use tauri::Manager;
+use tokio::sync::Mutex;
+
+mod telemetry;
+use telemetry::poller::TelemetryPoller;
+use telemetry::storage::TelemetryStorage;
 
 // === Known paths ===
 
@@ -50,7 +57,7 @@ pub struct SessionFileInfo {
     modified: f64,
 }
 
-// === Tauri Commands ===
+// === Original Tauri Commands ===
 
 #[tauri::command]
 fn check_local_status() -> LocalStatus {
@@ -201,15 +208,94 @@ fn read_image_as_data_url(path: &Path) -> Result<String, String> {
     Ok(format!("data:image/jpeg;base64,{}", b64))
 }
 
+// === Telemetry Commands ===
+
+/// Managed state for the telemetry poller
+struct TelemetryState {
+    poller: Arc<Mutex<TelemetryPoller>>,
+}
+
+#[tauri::command]
+async fn start_telemetry(
+    state: tauri::State<'_, TelemetryState>,
+    app_handle: tauri::AppHandle,
+) -> Result<(), String> {
+    let poller = state.poller.lock().await;
+    poller.start(app_handle).await
+}
+
+#[tauri::command]
+async fn stop_telemetry(
+    state: tauri::State<'_, TelemetryState>,
+    save_session: bool,
+) -> Result<Option<String>, String> {
+    let poller = state.poller.lock().await;
+    poller.stop(save_session).await
+}
+
+#[tauri::command]
+async fn get_telemetry_status(
+    state: tauri::State<'_, TelemetryState>,
+) -> Result<telemetry::TelemetryStatus, String> {
+    let poller = state.poller.lock().await;
+    Ok(poller.status().await)
+}
+
+#[tauri::command]
+async fn list_telemetry_sessions(
+    app_handle: tauri::AppHandle,
+) -> Result<Vec<telemetry::storage::TelemetrySessionInfo>, String> {
+    let data_dir = app_handle
+        .path()
+        .app_data_dir()
+        .map_err(|e| e.to_string())?;
+    let storage = TelemetryStorage::new(data_dir);
+    storage.list_sessions().map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+async fn read_telemetry_session(
+    app_handle: tauri::AppHandle,
+    file_name: String,
+) -> Result<telemetry::storage::TelemetrySession, String> {
+    let data_dir = app_handle
+        .path()
+        .app_data_dir()
+        .map_err(|e| e.to_string())?;
+    let storage = TelemetryStorage::new(data_dir);
+    storage.read_session(&file_name)
+}
+
 pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_shell::init())
+        .setup(|app| {
+            // Initialize telemetry state with app data directory
+            let data_dir = app
+                .path()
+                .app_data_dir()
+                .expect("Failed to resolve app data dir");
+            let _ = fs::create_dir_all(&data_dir);
+
+            let poller = TelemetryPoller::new(data_dir);
+            app.manage(TelemetryState {
+                poller: Arc::new(Mutex::new(poller)),
+            });
+            Ok(())
+        })
         .invoke_handler(tauri::generate_handler![
+            // Original commands
             check_local_status,
             list_cm_sessions,
             read_cm_session,
             get_car_preview,
             get_car_info,
+            // Telemetry commands
+            start_telemetry,
+            stop_telemetry,
+            get_telemetry_status,
+            list_telemetry_sessions,
+            read_telemetry_session,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
