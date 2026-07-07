@@ -17,13 +17,22 @@ const MAX_FILES = 20;
 const BLOB_PREFIX = 'ac-sessions/';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
-  // CORS headers for the SPA
+  // CORS headers
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, DELETE, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
 
   if (req.method === 'OPTIONS') {
     return res.status(200).end();
+  }
+
+  // Check that the token is configured
+  if (!process.env.BLOB_READ_WRITE_TOKEN) {
+    console.error('[API /sessions] BLOB_READ_WRITE_TOKEN is not set');
+    return res.status(500).json({
+      error: 'Blob storage not configured',
+      detail: 'BLOB_READ_WRITE_TOKEN environment variable is missing',
+    });
   }
 
   try {
@@ -37,9 +46,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       default:
         return res.status(405).json({ error: 'Method not allowed' });
     }
-  } catch (err) {
-    console.error('[API /sessions]', err);
-    return res.status(500).json({ error: 'Internal server error' });
+  } catch (err: any) {
+    console.error('[API /sessions] Unhandled error:', err);
+    return res.status(500).json({
+      error: 'Internal server error',
+      detail: err?.message ?? String(err),
+    });
   }
 }
 
@@ -47,7 +59,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
  * GET — List all cached sessions with their content.
  */
 async function handleGet(res: VercelResponse) {
-  const { blobs } = await list({ prefix: BLOB_PREFIX });
+  const { blobs } = await list({
+    prefix: BLOB_PREFIX,
+    token: process.env.BLOB_READ_WRITE_TOKEN,
+  });
 
   // Sort newest first
   const sorted = blobs.sort(
@@ -57,21 +72,24 @@ async function handleGet(res: VercelResponse) {
   // Fetch content for each blob in parallel
   const sessions = await Promise.all(
     sorted.map(async (blob) => {
-      const response = await fetch(blob.url);
-      const content = await response.text();
-      // Extract the original filename from the blob pathname
-      const fileName = blob.pathname.replace(BLOB_PREFIX, '');
-      return {
-        fileName,
-        content,
-        fileSize: blob.size,
-        cachedAt: new Date(blob.uploadedAt).getTime(),
-        blobUrl: blob.url,
-      };
+      try {
+        const response = await fetch(blob.url);
+        const content = await response.text();
+        const fileName = blob.pathname.replace(BLOB_PREFIX, '');
+        return {
+          fileName,
+          content,
+          fileSize: blob.size,
+          cachedAt: new Date(blob.uploadedAt).getTime(),
+        };
+      } catch {
+        return null;
+      }
     })
   );
 
-  return res.status(200).json({ sessions, count: sessions.length });
+  const validSessions = sessions.filter(Boolean);
+  return res.status(200).json({ sessions: validSessions, count: validSessions.length });
 }
 
 /**
@@ -79,41 +97,48 @@ async function handleGet(res: VercelResponse) {
  * Body: { fileName: string, content: string, fileSize: number }
  */
 async function handlePost(req: VercelRequest, res: VercelResponse) {
-  const { fileName, content, fileSize } = req.body as {
+  const body = req.body;
+
+  if (!body || !body.fileName || !body.content) {
+    return res.status(400).json({
+      error: 'fileName and content are required',
+      received: body ? Object.keys(body) : 'no body',
+    });
+  }
+
+  const { fileName, content, fileSize } = body as {
     fileName: string;
     content: string;
     fileSize: number;
   };
 
-  if (!fileName || !content) {
-    return res.status(400).json({ error: 'fileName and content are required' });
-  }
+  const token = process.env.BLOB_READ_WRITE_TOKEN!;
 
   // List existing blobs
-  const { blobs } = await list({ prefix: BLOB_PREFIX });
+  const { blobs } = await list({ prefix: BLOB_PREFIX, token });
 
   // Delete existing blob with same name (update case)
   const existing = blobs.find(b => b.pathname === `${BLOB_PREFIX}${fileName}`);
   if (existing) {
-    await del(existing.url);
+    await del(existing.url, { token });
   }
 
   // Enforce FIFO: if we're at the limit, delete the oldest
   const currentCount = existing ? blobs.length - 1 : blobs.length;
   if (currentCount >= MAX_FILES) {
-    // Sort oldest first
     const sorted = blobs
       .filter(b => b.url !== existing?.url)
       .sort((a, b) => new Date(a.uploadedAt).getTime() - new Date(b.uploadedAt).getTime());
 
     const toDelete = sorted.slice(0, currentCount - MAX_FILES + 1);
-    await Promise.all(toDelete.map(b => del(b.url)));
+    await Promise.all(toDelete.map(b => del(b.url, { token })));
   }
 
   // Upload the new file
   const blob = await put(`${BLOB_PREFIX}${fileName}`, content, {
     access: 'public',
     contentType: 'application/json',
+    token,
   });
 
   return res.status(201).json({
@@ -131,21 +156,21 @@ async function handlePost(req: VercelRequest, res: VercelResponse) {
  */
 async function handleDelete(req: VercelRequest, res: VercelResponse) {
   const { all, file } = req.query;
+  const token = process.env.BLOB_READ_WRITE_TOKEN!;
 
   if (all === 'true') {
-    // Delete all blobs with our prefix
-    const { blobs } = await list({ prefix: BLOB_PREFIX });
+    const { blobs } = await list({ prefix: BLOB_PREFIX, token });
     if (blobs.length > 0) {
-      await Promise.all(blobs.map(b => del(b.url)));
+      await Promise.all(blobs.map(b => del(b.url, { token })));
     }
     return res.status(200).json({ deleted: blobs.length });
   }
 
   if (typeof file === 'string' && file) {
-    const { blobs } = await list({ prefix: `${BLOB_PREFIX}${file}` });
+    const { blobs } = await list({ prefix: `${BLOB_PREFIX}${file}`, token });
     const target = blobs.find(b => b.pathname === `${BLOB_PREFIX}${file}`);
     if (target) {
-      await del(target.url);
+      await del(target.url, { token });
       return res.status(200).json({ deleted: 1, fileName: file });
     }
     return res.status(404).json({ error: 'File not found' });

@@ -30,7 +30,12 @@ async function isApiAvailable(): Promise<boolean> {
   if (_apiAvailable !== null) return _apiAvailable;
   try {
     const res = await fetch(API_BASE, { method: 'GET' });
+    // Only available if it returns success (not 500 = misconfigured)
     _apiAvailable = res.ok;
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      console.warn('[SessionCache] API returned', res.status, err, '— using localStorage');
+    }
   } catch {
     _apiAvailable = false;
   }
@@ -84,17 +89,26 @@ export async function addToCache(
 ): Promise<void> {
   if (await isApiAvailable()) {
     try {
-      await Promise.all(
-        files.map((file) =>
-          fetch(API_BASE, {
+      const results = await Promise.all(
+        files.map(async (file) => {
+          const res = await fetch(API_BASE, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(file),
-          })
-        ),
+          });
+          if (!res.ok) {
+            const err = await res.json().catch(() => ({}));
+            console.warn('[SessionCache] API upload failed:', res.status, err);
+            return false;
+          }
+          return true;
+        }),
       );
-      return;
-    } catch { /* fall through to local */ }
+      // If at least one upload succeeded via API, don't fall through
+      if (results.some(Boolean)) return;
+    } catch (e) {
+      console.warn('[SessionCache] API unreachable, using localStorage', e);
+    }
   }
 
   // localStorage fallback
