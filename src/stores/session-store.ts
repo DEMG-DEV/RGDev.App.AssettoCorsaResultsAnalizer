@@ -20,7 +20,7 @@ interface SessionStore {
   /** Loading progress */
   loadingProgress: { current: number; total: number } | null;
   /** Current view */
-  view: 'home' | 'session' | 'driver' | 'history' | 'track-records';
+  view: 'home' | 'session' | 'driver' | 'track-records';
   /** Active brand theme */
   theme: BrandTheme;
 
@@ -133,7 +133,7 @@ export const useSessionStore = create<SessionStore>((set, get) => ({
     const state = get();
     if (state.view === 'driver') {
       set({ view: 'session', selectedDriverIndex: null });
-    } else if (state.view === 'session' || state.view === 'history' || state.view === 'track-records') {
+    } else if (state.view === 'session' || state.view === 'track-records') {
       set({ view: 'home', selectedSession: null });
     }
   },

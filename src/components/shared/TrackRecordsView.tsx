@@ -5,6 +5,7 @@ import { formatLapTime, formatSessionDate } from '../../core/utils/time-formatte
 import { PositionBadge } from './PositionBadge';
 import { CarPreviewImage } from './CarPreviewImage';
 import { Trophy, Calendar, Compass, AlertTriangle, Disc, Zap } from 'lucide-react';
+import { TrackRecordsCharts } from './TrackRecordsCharts';
 
 interface TrackRecordEntry {
   driverName: string;
@@ -14,6 +15,9 @@ interface TrackRecordEntry {
   avgLapMs: number;
   theoreticalBestMs: number;
   consistencyMs: number;
+  bestS1: number;
+  bestS2: number;
+  bestS3: number;
   tyre: string;
   cuts: number;
   layout: string;
@@ -103,6 +107,9 @@ export const TrackRecordsView: React.FC = () => {
             avgLapMs,
             theoreticalBestMs,
             consistencyMs,
+            bestS1,
+            bestS2,
+            bestS3,
             tyre,
             cuts,
             layout,
@@ -217,6 +224,9 @@ export const TrackRecordsView: React.FC = () => {
               </div>
             </div>
           )}
+
+          {/* Graphical Analytics */}
+          <TrackRecordsCharts records={records} />
 
           {/* Combined Leaderboard Table */}
           <div className="chart-container" style={{ padding: 0, overflow: 'hidden' }}>

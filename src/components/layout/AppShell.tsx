@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ArrowLeft, Trash2, BarChart3, HardDrive, Trophy } from 'lucide-react';
+import { ArrowLeft, Trash2, HardDrive, Trophy } from 'lucide-react';
 import { useSessionStore } from '../../stores/session-store';
 import { ThemePicker } from '../shared/ThemePicker';
 import { getCacheCount } from '../../services/session-cache';
@@ -64,12 +64,6 @@ export const AppShell: React.FC<Props> = ({ children }) => {
             <button className="btn btn-sm" onClick={() => setView('track-records')}>
               <Trophy size={14} />
               Récords por Pista
-            </button>
-          )}
-          {totalSessions > 1 && view !== 'history' && (
-            <button className="btn btn-sm" onClick={() => setView('history')}>
-              <BarChart3 size={14} />
-              {es.home.viewHistory}
             </button>
           )}
           {totalSessions > 0 && (
