@@ -41,11 +41,11 @@ function localSet(cache: CachedFile[]): void {
   }
 }
 
-function localAdd(files: Array<{ fileName: string; content: string; fileSize: number }>): void {
+function localAdd(files: Array<{ fileName: string; content: string; fileSize: number; lastModified?: number }>): void {
   let cache = localGet();
   for (const file of files) {
     cache = cache.filter(c => c.fileName !== file.fileName);
-    cache.push({ ...file, cachedAt: Date.now() });
+    cache.push({ ...file, cachedAt: file.lastModified ?? Date.now() });
   }
   if (cache.length > MAX_CACHED_FILES) {
     cache.sort((a, b) => a.cachedAt - b.cachedAt);
@@ -77,7 +77,7 @@ export async function getCachedFiles(): Promise<CachedFile[]> {
  * Upload files to the cache (max 20, FIFO).
  */
 export async function addToCache(
-  files: Array<{ fileName: string; content: string; fileSize: number }>,
+  files: Array<{ fileName: string; content: string; fileSize: number; lastModified?: number }>,
 ): Promise<void> {
   // Always save locally first (instant, reliable)
   localAdd(files);

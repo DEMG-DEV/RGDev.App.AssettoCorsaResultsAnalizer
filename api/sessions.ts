@@ -80,6 +80,11 @@ function extractSessionDate(content: string, fileName: string, fallbackDate: Dat
   try {
     const data = JSON.parse(content);
     
+    // 0. Try custom injected appSessionDate first (lastModified date from File object)
+    if (data && data.appSessionDate) {
+      return new Date(data.appSessionDate);
+    }
+    
     // 1. Try __quickDrive -> dtv (Content Manager client format)
     if (data && typeof data.__quickDrive === 'string') {
       const qd = JSON.parse(data.__quickDrive);
@@ -166,11 +171,25 @@ async function handlePost(req: VercelRequest, res: VercelResponse) {
     });
   }
 
-  const { fileName, content, fileSize } = body as {
+  const { fileName, content: rawContent, fileSize, lastModified } = body as {
     fileName: string;
     content: string;
     fileSize: number;
+    lastModified?: number;
   };
+
+  let content = rawContent;
+  if (lastModified) {
+    try {
+      const data = JSON.parse(rawContent);
+      if (data && typeof data === 'object') {
+        data.appSessionDate = lastModified;
+        content = JSON.stringify(data);
+      }
+    } catch {
+      // Ignore JSON parsing errors, upload raw content
+    }
+  }
 
   const token = process.env.BLOB_READ_WRITE_TOKEN!;
 
