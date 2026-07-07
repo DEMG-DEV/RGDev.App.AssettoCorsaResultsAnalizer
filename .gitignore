@@ -1,5 +1,4 @@
 node_modules
 dist
-android
-src-tauri/target
 .DS_Store
+.vercel

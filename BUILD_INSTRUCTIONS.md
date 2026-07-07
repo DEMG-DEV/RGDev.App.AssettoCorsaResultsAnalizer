@@ -3,6 +3,9 @@
 ## Web (Browser)
 
 ```bash
+# Install dependencies
+pnpm install
+
 # Development
 pnpm dev
 
@@ -15,85 +18,30 @@ pnpm preview
 
 ---
 
-## 🖥️ Desktop — Tauri 2.x
+## ☁️ Deploy to Vercel
 
-### Prerequisites
-
-1. **Instalar Rust**: https://rustup.rs/
-   ```bash
-   winget install Rustlang.Rustup
-   ```
-2. **Visual Studio Build Tools** (C++ workload):
-   ```bash
-   winget install Microsoft.VisualStudio.2022.BuildTools
-   ```
-3. **WebView2** (incluido en Windows 10/11 moderno)
-
-### Desarrollo
+### Option 1: Via Vercel CLI
 
 ```bash
-pnpm tauri:dev
-```
-> Abre la app en una ventana de escritorio con hot-reload.
+# Install Vercel CLI
+npm i -g vercel
 
-### Compilar .msi (Windows)
-
-```bash
-pnpm tauri:build
-```
-> Genera el instalador `.msi` en `src-tauri/target/release/bundle/msi/`.
-
-### Compilar para macOS (.dmg)
-
-```bash
-# Desde una Mac con Xcode instalado
-pnpm tauri:build
+# Deploy
+vercel
 ```
 
-### Compilar para Linux (.AppImage / .deb)
+### Option 2: Via GitHub
 
-```bash
-# Desde Linux con build-essential instalado
-pnpm tauri:build
-```
+1. Push to GitHub
+2. Import the repo at [vercel.com/new](https://vercel.com/new)
+3. Vercel auto-detects Vite + React
+4. Deploy!
 
----
+### Configuration
 
-## 📱 Android — Capacitor
-
-### Prerequisites
-
-1. **Android Studio**: https://developer.android.com/studio
-2. **JDK 17+**: (Android Studio lo incluye)
-3. Configurar `ANDROID_HOME` en variables de entorno
-
-### Setup inicial (solo una vez)
-
-```bash
-# Build web + sync con Android
-pnpm cap:sync
-
-# Si es la primera vez, agregar la plataforma:
-npx cap add android
-```
-
-### Desarrollo
-
-```bash
-# Abrir en Android Studio
-pnpm cap:open
-
-# O ejecutar directamente en emulador/dispositivo
-npx cap run android
-```
-
-### Compilar APK
-
-```bash
-pnpm build
-npx cap sync
-# Luego en Android Studio: Build > Build Bundle(s) / APK(s)
-```
+The `vercel.json` already handles:
+- SPA routing (all routes → `index.html`)
+- Static asset caching (1 year for `/assets/*`)
 
 ---
 
@@ -102,15 +50,15 @@ npx cap sync
 ```
 ac-results-analyzer/
 ├── src/                    # React/TypeScript source
-├── src-tauri/              # Tauri (Rust) backend
-│   ├── src/                # Rust source files
-│   ├── Cargo.toml          # Rust dependencies
-│   ├── tauri.conf.json     # Tauri configuration
-│   └── icons/              # App icons
-├── android/                # Capacitor Android project (auto-generated)
-├── capacitor.config.ts     # Capacitor configuration
+│   ├── components/         # UI components
+│   ├── core/               # Parsers, analyzers, models
+│   ├── services/           # File loader, car image catalog
+│   ├── stores/             # Zustand state management
+│   ├── i18n/               # Spanish translations
+│   └── index.css           # Design system
 ├── dist/                   # Production build output
-└── package.json            # Node.js dependencies & scripts
+├── vercel.json             # Vercel SPA configuration
+└── package.json            # Dependencies & scripts
 ```
 
 ## 📜 Scripts disponibles
@@ -119,8 +67,5 @@ ac-results-analyzer/
 |--------|-------------|
 | `pnpm dev` | Servidor de desarrollo web |
 | `pnpm build` | Build de producción |
+| `pnpm preview` | Preview del build de producción |
 | `pnpm test` | Ejecutar tests |
-| `pnpm tauri:dev` | Desarrollo desktop (Tauri) |
-| `pnpm tauri:build` | Compilar instalador desktop |
-| `pnpm cap:sync` | Build + sync con Android |
-| `pnpm cap:open` | Abrir proyecto Android |

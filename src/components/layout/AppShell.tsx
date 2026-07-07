@@ -1,8 +1,8 @@
-import React from 'react';
-import { ArrowLeft, Trash2, BarChart3, Radio } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { ArrowLeft, Trash2, BarChart3, HardDrive } from 'lucide-react';
 import { useSessionStore } from '../../stores/session-store';
 import { ThemePicker } from '../shared/ThemePicker';
-import { isTauriEnvironment } from '../../services/telemetry-service';
+import { getCacheCount } from '../../services/session-cache';
 import { es } from '../../i18n/es';
 
 interface Props {
@@ -13,7 +13,12 @@ export const AppShell: React.FC<Props> = ({ children }) => {
   const { view, results, goBack, clearAll, setView } = useSessionStore();
   const totalSessions = results.reduce((s, r) => s + r.sessions.length, 0);
   const canGoBack = view !== 'home';
-  const isTauri = isTauriEnvironment();
+  const [cachedCount, setCachedCount] = useState(0);
+
+  // Fetch cache count on mount and when results change
+  useEffect(() => {
+    getCacheCount().then(setCachedCount).catch(() => setCachedCount(0));
+  }, [results]);
 
   return (
     <div className="app-shell">
@@ -33,16 +38,25 @@ export const AppShell: React.FC<Props> = ({ children }) => {
           )}
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-md)' }}>
-          {/* Live Telemetry button — only in Tauri */}
-          {isTauri && view !== 'telemetry' && (
-            <button
-              className="btn btn-sm btn-telemetry"
-              onClick={() => setView('telemetry')}
-              title={es.telemetry.title}
+          {/* Cache indicator */}
+          {cachedCount > 0 && (
+            <span
+              title={es.common.cachedTooltip}
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 4,
+                fontSize: '0.75rem',
+                color: 'var(--text-muted)',
+                background: 'var(--bg-glass)',
+                padding: '3px 8px',
+                borderRadius: 'var(--radius-sm)',
+                border: '1px solid var(--border-subtle)',
+              }}
             >
-              <Radio size={14} />
-              {es.telemetry.liveButton}
-            </button>
+              <HardDrive size={12} />
+              {es.common.cachedFiles.replace('{count}', String(cachedCount))}
+            </span>
           )}
           <ThemePicker />
           <div style={{ width: 1, height: 20, background: 'var(--border-subtle)' }} />

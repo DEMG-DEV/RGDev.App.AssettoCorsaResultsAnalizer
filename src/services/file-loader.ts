@@ -5,6 +5,7 @@
 import JSZip from 'jszip';
 import { parseJsonFile } from '../core/parsers/format-detector';
 import type { ParseResult } from '../core/models/types';
+import { addToCache } from './session-cache';
 
 /**
  * Load and parse a single File object.
@@ -60,6 +61,18 @@ export async function loadFiles(
     onProgress?.(i + 1, allFiles.length);
     const result = parseJsonFile(f.content, f.name, f.size);
     results.push(result);
+  }
+
+  // Cache successfully parsed files in localStorage (max 20, FIFO)
+  const filesToCache = allFiles.filter((f) =>
+    results.some(r => r.fileName === f.name && r.sessions.length > 0)
+  );
+  if (filesToCache.length > 0) {
+    addToCache(filesToCache.map(f => ({
+      fileName: f.name,
+      content: f.content,
+      fileSize: f.size,
+    })));
   }
 
   return results;

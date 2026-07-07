@@ -1,20 +1,13 @@
-import React, { useRef, useState, useCallback, useEffect } from 'react';
-import { Upload, CheckCircle, AlertTriangle } from 'lucide-react';
+import React, { useRef, useState, useCallback } from 'react';
+import { Upload } from 'lucide-react';
 import { useSessionStore } from '../../stores/session-store';
 import { loadFiles } from '../../services/file-loader';
-import { checkLocalStatus, type LocalStatus } from '../../services/auto-setup';
 import { es } from '../../i18n/es';
 
 export const FileDropZone: React.FC = () => {
   const [isDragOver, setIsDragOver] = useState(false);
-  const [localStatus, setLocalStatus] = useState<LocalStatus | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { addResults, setLoading, setLoadingProgress } = useSessionStore();
-
-  // Check local status on mount
-  useEffect(() => {
-    checkLocalStatus().then(setLocalStatus);
-  }, []);
 
   const handleFiles = useCallback(async (files: File[]) => {
     if (files.length === 0) return;
@@ -44,63 +37,6 @@ export const FileDropZone: React.FC = () => {
 
   return (
     <div className="animate-in">
-      {/* Auto-detection status */}
-      {localStatus && (
-        <div style={{ display: 'flex', gap: 'var(--space-md)', marginBottom: 'var(--space-lg)', flexWrap: 'wrap' }}>
-          {/* CM Status */}
-          <div className="card" style={{
-            flex: 1,
-            minWidth: 280,
-            padding: 'var(--space-md)',
-            display: 'flex',
-            alignItems: 'center',
-            gap: 'var(--space-md)',
-            borderColor: localStatus.cmFound ? 'rgba(76, 175, 80, 0.3)' : 'rgba(255, 152, 0, 0.3)',
-          }}>
-            {localStatus.cmFound
-              ? <CheckCircle size={22} style={{ color: 'var(--color-finished)', flexShrink: 0 }} />
-              : <AlertTriangle size={22} style={{ color: '#FF9800', flexShrink: 0 }} />
-            }
-            <div style={{ flex: 1 }}>
-              <div style={{ fontWeight: 600, fontSize: '0.85rem' }}>
-                {localStatus.cmFound ? '✅ Content Manager detectado' : '⚠️ Content Manager no encontrado'}
-              </div>
-              <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', wordBreak: 'break-all' }}>
-                {localStatus.cmFound
-                  ? localStatus.cmPath
-                  : 'Selecciona archivos manualmente abajo'}
-              </div>
-            </div>
-          </div>
-
-          {/* AC Status */}
-          <div className="card" style={{
-            flex: 1,
-            minWidth: 280,
-            padding: 'var(--space-md)',
-            display: 'flex',
-            alignItems: 'center',
-            gap: 'var(--space-md)',
-            borderColor: localStatus.acFound ? 'rgba(76, 175, 80, 0.3)' : 'rgba(255, 152, 0, 0.3)',
-          }}>
-            {localStatus.acFound
-              ? <CheckCircle size={22} style={{ color: 'var(--color-finished)', flexShrink: 0 }} />
-              : <AlertTriangle size={22} style={{ color: '#FF9800', flexShrink: 0 }} />
-            }
-            <div style={{ flex: 1 }}>
-              <div style={{ fontWeight: 600, fontSize: '0.85rem' }}>
-                {localStatus.acFound ? '✅ Assetto Corsa detectado' : '⚠️ Assetto Corsa no encontrado'}
-              </div>
-              <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', wordBreak: 'break-all' }}>
-                {localStatus.acFound
-                  ? `${localStatus.acPath} (imágenes habilitadas)`
-                  : 'Las imágenes de autos no se mostrarán'}
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
       {/* Drop zone — always available for manual loading */}
       <div
         className={`drop-zone ${isDragOver ? 'active' : ''}`}
@@ -112,7 +48,7 @@ export const FileDropZone: React.FC = () => {
       >
         <div className="icon">🏎️</div>
         <h3>{isDragOver ? es.home.dropZoneActive : es.home.dropZone}</h3>
-        <p className="hint">.json, .zip — también puedes agregar archivos adicionales</p>
+        <p className="hint">.json, .zip — archivos de Content Manager o servidor AC</p>
 
         <input
           ref={fileInputRef}

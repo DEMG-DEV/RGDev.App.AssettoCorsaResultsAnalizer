@@ -4,6 +4,7 @@
 
 import { create } from 'zustand';
 import type { ParseResult, Session } from '../core/models/types';
+import { clearCache, removeFromCache } from '../services/session-cache';
 
 export type BrandTheme = 'ferrari' | 'porsche' | 'toyota' | 'ford';
 
@@ -14,14 +15,12 @@ interface SessionStore {
   selectedSession: Session | null;
   /** Index of selected driver in session.participants */
   selectedDriverIndex: number | null;
-  /** Whether AC root folder is configured */
-  acRootConfigured: boolean;
   /** Loading state */
   isLoading: boolean;
   /** Loading progress */
   loadingProgress: { current: number; total: number } | null;
   /** Current view */
-  view: 'home' | 'session' | 'driver' | 'history' | 'telemetry';
+  view: 'home' | 'session' | 'driver' | 'history';
   /** Active brand theme */
   theme: BrandTheme;
 
@@ -30,7 +29,6 @@ interface SessionStore {
   selectSession: (session: Session) => void;
   selectDriver: (index: number | null) => void;
   removeSession: (sessionId: string) => void;
-  setAcRootConfigured: (configured: boolean) => void;
   setLoading: (loading: boolean) => void;
   setLoadingProgress: (current: number, total: number) => void;
   setView: (view: SessionStore['view']) => void;
@@ -53,7 +51,6 @@ export const useSessionStore = create<SessionStore>((set, get) => ({
   results: [],
   selectedSession: null,
   selectedDriverIndex: null,
-  acRootConfigured: false,
   isLoading: false,
   loadingProgress: null,
   view: 'home',
@@ -77,28 +74,34 @@ export const useSessionStore = create<SessionStore>((set, get) => ({
       view: index !== null ? 'driver' : 'session',
     }),
 
-  removeSession: (sessionId) =>
-    set((state) => {
-      // Filter the session out of every ParseResult
-      const updatedResults = state.results
-        .map((r) => ({
-          ...r,
-          sessions: r.sessions.filter((s) => s.id !== sessionId),
-        }))
-        .filter((r) => r.sessions.length > 0); // drop empty results
+  removeSession: (sessionId) => {
+    const state = get();
 
-      // If the deleted session was currently selected, go back home
-      const wasSelected = state.selectedSession?.id === sessionId;
-      return {
-        results: updatedResults,
-        ...(wasSelected
-          ? { selectedSession: null, selectedDriverIndex: null, view: 'home' as const }
-          : {}),
-      };
-    }),
+    // Find which results will become empty after removing this session
+    const emptiedFileNames = state.results
+      .filter(r => r.sessions.some(s => s.id === sessionId) && r.sessions.length === 1)
+      .map(r => r.fileName);
 
-  setAcRootConfigured: (configured) =>
-    set({ acRootConfigured: configured }),
+    // Remove from shared cache in the background (fire-and-forget)
+    emptiedFileNames.forEach(fn => removeFromCache(fn));
+
+    // Filter the session out of every ParseResult
+    const updatedResults = state.results
+      .map((r) => ({
+        ...r,
+        sessions: r.sessions.filter((s) => s.id !== sessionId),
+      }))
+      .filter((r) => r.sessions.length > 0);
+
+    // If the deleted session was currently selected, go back home
+    const wasSelected = state.selectedSession?.id === sessionId;
+    set({
+      results: updatedResults,
+      ...(wasSelected
+        ? { selectedSession: null, selectedDriverIndex: null, view: 'home' as const }
+        : {}),
+    });
+  },
 
   setLoading: (loading) =>
     set({ isLoading: loading, loadingProgress: loading ? null : null }),
@@ -115,19 +118,22 @@ export const useSessionStore = create<SessionStore>((set, get) => ({
     set({ theme });
   },
 
-  clearAll: () =>
+  clearAll: () => {
+    // Clear shared cache in the background (fire-and-forget)
+    clearCache();
     set({
       results: [],
       selectedSession: null,
       selectedDriverIndex: null,
       view: 'home',
-    }),
+    });
+  },
 
   goBack: () => {
     const state = get();
     if (state.view === 'driver') {
       set({ view: 'session', selectedDriverIndex: null });
-    } else if (state.view === 'session' || state.view === 'history' || state.view === 'telemetry') {
+    } else if (state.view === 'session' || state.view === 'history') {
       set({ view: 'home', selectedSession: null });
     }
   },
