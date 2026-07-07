@@ -3,7 +3,7 @@
  *
  * Resolution order:
  * 1. Static catalog (official AC cars → Wikimedia Commons URLs)
- * 2. Wikipedia API search (mod cars → search by humanized car name)
+ * 2. Wikipedia API search (any car → search by humanized car name)
  * 3. Null (shows placeholder initials in the UI)
  */
 
@@ -23,16 +23,15 @@ const wikiSearchCache = new Map<string, string | null>();
  *
  * Example: "Toyota GT86" → Wikipedia article thumbnail URL
  */
-async function searchWikipediaImage(carName: string): Promise<string | null> {
+export async function searchWikipediaImage(carName: string): Promise<string | null> {
   // Check cache first
   if (wikiSearchCache.has(carName)) {
     return wikiSearchCache.get(carName)!;
   }
 
   try {
-    // Step 1: Search for the car article
     const searchUrl = `https://en.wikipedia.org/w/api.php?` +
-      `action=query&generator=search&gsrsearch=${encodeURIComponent(carName + ' car')}&gsrlimit=1` +
+      `action=query&generator=search&gsrsearch=${encodeURIComponent(carName + ' car')}&gsrlimit=3` +
       `&prop=pageimages&piprop=thumbnail&pithumbsize=640&format=json&origin=*`;
 
     const res = await fetch(searchUrl);
@@ -66,7 +65,7 @@ async function searchWikipediaImage(carName: string): Promise<string | null> {
  * Resolve car preview image URL.
  *
  * For official AC cars: instant lookup in the static catalog.
- * For mod cars: async Wikipedia API search by car name.
+ * For any car without catalog entry: async Wikipedia API search.
  */
 export async function resolveCarPreview(
   carId: string,
@@ -79,16 +78,21 @@ export async function resolveCarPreview(
   // 1. Try static catalog (official cars)
   let imageUrl = getOnlineCarImageUrl(carId);
 
-  // 2. If not found, search Wikipedia (mod cars)
-  if (!imageUrl) {
-    const carName = humanizeCarId(carId);
-    imageUrl = await searchWikipediaImage(carName);
+  // 2. Always also try Wikipedia — use as primary or fallback
+  const carName = humanizeCarId(carId);
+  const wikiUrl = await searchWikipediaImage(carName);
+
+  // Prefer catalog URL, but use Wikipedia if catalog is missing
+  if (!imageUrl && wikiUrl) {
+    imageUrl = wikiUrl;
   }
 
   const result: CarImages = {
     previewUrl: imageUrl,
     liveryUrl: null,
     isLocalAsset: false,
+    // Store the Wikipedia URL as fallback even when catalog URL exists
+    fallbackUrl: wikiUrl && wikiUrl !== imageUrl ? wikiUrl : null,
   };
 
   imageCache.set(cacheKey, result);

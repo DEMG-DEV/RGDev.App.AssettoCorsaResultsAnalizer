@@ -24,7 +24,10 @@ const App: React.FC = () => {
     (async () => {
       setLoading(true);
       try {
+        console.info('[AutoLoad] Fetching cached sessions...');
         const cached = await getCachedFiles();
+        console.info(`[AutoLoad] Found ${cached.length} cached files`);
+
         if (cached.length === 0) {
           setLoading(false);
           return;
@@ -36,14 +39,15 @@ const App: React.FC = () => {
         });
 
         const validResults = parsedResults.filter(r => r.sessions.length > 0);
+        console.info(`[AutoLoad] Parsed ${validResults.length} valid results from ${cached.length} files`);
+
         if (validResults.length > 0) {
           addResults(validResults);
           setRestoredFromCache(true);
-          // Auto-dismiss the indicator after 4 seconds
           setTimeout(() => setRestoredFromCache(false), 4000);
         }
-      } catch {
-        // API not available — no cached sessions
+      } catch (err) {
+        console.error('[AutoLoad] Failed to restore cached sessions:', err);
       }
       setLoading(false);
     })();

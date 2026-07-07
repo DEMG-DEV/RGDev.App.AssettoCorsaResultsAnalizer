@@ -239,6 +239,8 @@ export interface CarImages {
   liveryUrl: string | null;
   /** Whether images came from local AC install */
   isLocalAsset: boolean;
+  /** Fallback URL (Wikipedia) if primary URL fails to load */
+  fallbackUrl?: string | null;
 }
 
 /** Car info from ui_car.json */

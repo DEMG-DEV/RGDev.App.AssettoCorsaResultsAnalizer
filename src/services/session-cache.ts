@@ -3,10 +3,9 @@
  *
  * Strategy:
  * 1. Try the Vercel Blob API (/api/sessions) for shared storage
- * 2. If the API fails (not deployed, no token, etc.), fall back to localStorage
+ * 2. If the API fails, fall back to localStorage
  *
- * The last 20 uploaded JSON files are persisted; older files are automatically
- * removed (FIFO).
+ * The last 20 uploaded JSON files are persisted (FIFO).
  */
 
 const API_BASE = '/api/sessions';
@@ -19,27 +18,6 @@ export interface CachedFile {
   content: string;
   fileSize: number;
   cachedAt: number;
-}
-
-// ─── Helpers ────────────────────────────────────────────────────────────────
-
-/** Check if the API is reachable (cached per session). */
-let _apiAvailable: boolean | null = null;
-
-async function isApiAvailable(): Promise<boolean> {
-  if (_apiAvailable !== null) return _apiAvailable;
-  try {
-    const res = await fetch(API_BASE, { method: 'GET' });
-    // Only available if it returns success (not 500 = misconfigured)
-    _apiAvailable = res.ok;
-    if (!res.ok) {
-      const err = await res.json().catch(() => ({}));
-      console.warn('[SessionCache] API returned', res.status, err, '— using localStorage');
-    }
-  } catch {
-    _apiAvailable = false;
-  }
-  return _apiAvailable;
 }
 
 // ─── localStorage helpers ───────────────────────────────────────────────────
@@ -63,55 +41,7 @@ function localSet(cache: CachedFile[]): void {
   }
 }
 
-// ─── Public API ─────────────────────────────────────────────────────────────
-
-/**
- * Fetch all cached files.
- */
-export async function getCachedFiles(): Promise<CachedFile[]> {
-  if (await isApiAvailable()) {
-    try {
-      const res = await fetch(API_BASE);
-      if (res.ok) {
-        const data = await res.json();
-        return (data.sessions ?? []) as CachedFile[];
-      }
-    } catch { /* fall through */ }
-  }
-  return localGet();
-}
-
-/**
- * Upload files to the cache (max 20, FIFO).
- */
-export async function addToCache(
-  files: Array<{ fileName: string; content: string; fileSize: number }>,
-): Promise<void> {
-  if (await isApiAvailable()) {
-    try {
-      const results = await Promise.all(
-        files.map(async (file) => {
-          const res = await fetch(API_BASE, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(file),
-          });
-          if (!res.ok) {
-            const err = await res.json().catch(() => ({}));
-            console.warn('[SessionCache] API upload failed:', res.status, err);
-            return false;
-          }
-          return true;
-        }),
-      );
-      // If at least one upload succeeded via API, don't fall through
-      if (results.some(Boolean)) return;
-    } catch (e) {
-      console.warn('[SessionCache] API unreachable, using localStorage', e);
-    }
-  }
-
-  // localStorage fallback
+function localAdd(files: Array<{ fileName: string; content: string; fileSize: number }>): void {
   let cache = localGet();
   for (const file of files) {
     cache = cache.filter(c => c.fileName !== file.fileName);
@@ -124,44 +54,94 @@ export async function addToCache(
   localSet(cache);
 }
 
+// ─── Public API (try remote, fallback to local) ─────────────────────────────
+
+/**
+ * Fetch all cached files.
+ */
+export async function getCachedFiles(): Promise<CachedFile[]> {
+  try {
+    const res = await fetch(API_BASE);
+    if (res.ok) {
+      const data = await res.json();
+      const sessions = (data.sessions ?? []) as CachedFile[];
+      if (sessions.length > 0) return sessions;
+    }
+  } catch { /* fall through */ }
+
+  // Fallback to localStorage
+  return localGet();
+}
+
+/**
+ * Upload files to the cache (max 20, FIFO).
+ */
+export async function addToCache(
+  files: Array<{ fileName: string; content: string; fileSize: number }>,
+): Promise<void> {
+  // Always save locally first (instant, reliable)
+  localAdd(files);
+
+  // Then try remote in background
+  try {
+    const results = await Promise.all(
+      files.map(async (file) => {
+        const res = await fetch(API_BASE, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(file),
+        });
+        if (!res.ok) {
+          const err = await res.json().catch(() => ({}));
+          console.warn('[SessionCache] API upload failed:', res.status, err);
+        }
+        return res.ok;
+      }),
+    );
+    if (results.some(Boolean)) {
+      console.info('[SessionCache] Saved to shared storage');
+    }
+  } catch (e) {
+    console.warn('[SessionCache] API unreachable, saved to localStorage only', e);
+  }
+}
+
 /**
  * Remove a specific cached file by fileName.
  */
 export async function removeFromCache(fileName: string): Promise<void> {
-  if (await isApiAvailable()) {
-    try {
-      await fetch(`${API_BASE}?file=${encodeURIComponent(fileName)}`, { method: 'DELETE' });
-      return;
-    } catch { /* fall through */ }
-  }
+  // Remove locally
   localSet(localGet().filter(c => c.fileName !== fileName));
+
+  // Try remote
+  try {
+    await fetch(`${API_BASE}?file=${encodeURIComponent(fileName)}`, { method: 'DELETE' });
+  } catch { /* ignore */ }
 }
 
 /**
  * Clear the entire session cache.
  */
 export async function clearCache(): Promise<void> {
-  if (await isApiAvailable()) {
-    try {
-      await fetch(`${API_BASE}?all=true`, { method: 'DELETE' });
-    } catch { /* ignore */ }
-  }
-  // Always clear local too
+  // Clear locally
   try { localStorage.removeItem(STORAGE_KEY); } catch { /* ignore */ }
+
+  // Try remote
+  try {
+    await fetch(`${API_BASE}?all=true`, { method: 'DELETE' });
+  } catch { /* ignore */ }
 }
 
 /**
  * Get the number of cached files.
  */
 export async function getCacheCount(): Promise<number> {
-  if (await isApiAvailable()) {
-    try {
-      const res = await fetch(API_BASE);
-      if (res.ok) {
-        const data = await res.json();
-        return data.count ?? 0;
-      }
-    } catch { /* fall through */ }
-  }
+  try {
+    const res = await fetch(API_BASE);
+    if (res.ok) {
+      const data = await res.json();
+      return data.count ?? 0;
+    }
+  } catch { /* fall through */ }
   return localGet().length;
 }

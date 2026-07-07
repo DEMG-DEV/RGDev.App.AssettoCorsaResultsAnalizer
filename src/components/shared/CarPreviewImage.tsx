@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { resolveCarPreview } from '../../services/car-asset-service';
+import React, { useState, useEffect, useCallback } from 'react';
+import { resolveCarPreview, searchWikipediaImage } from '../../services/car-asset-service';
 import { humanizeCarId } from '../../core/utils/car-name-humanizer';
 
 interface Props {
@@ -12,19 +12,52 @@ interface Props {
 
 export const CarPreviewImage: React.FC<Props> = ({ carId, skinName, size = 40, showPopover = true }) => {
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [fallbackUrl, setFallbackUrl] = useState<string | null>(null);
   const [showFull, setShowFull] = useState(false);
+  const [imageError, setImageError] = useState(false);
 
   const width = Math.round(size * 1.33); // 4:3 aspect ratio
 
   useEffect(() => {
     let cancelled = false;
+    setImageError(false);
     resolveCarPreview(carId, skinName).then(images => {
-      if (!cancelled) setPreviewUrl(images.previewUrl);
+      if (!cancelled) {
+        setPreviewUrl(images.previewUrl);
+        setFallbackUrl(images.fallbackUrl ?? null);
+      }
     });
     return () => { cancelled = true; };
   }, [carId, skinName]);
 
-  if (!previewUrl) {
+  // When the primary image fails, try fallback or Wikipedia search
+  const handleImageError = useCallback(async () => {
+    // If we have a fallback URL and haven't used it yet, try it
+    if (fallbackUrl && !imageError) {
+      setImageError(true);
+      setPreviewUrl(fallbackUrl);
+      setFallbackUrl(null);
+      return;
+    }
+
+    // Last resort: search Wikipedia directly
+    if (!imageError) {
+      setImageError(true);
+      const carName = humanizeCarId(carId);
+      const wikiUrl = await searchWikipediaImage(carName);
+      if (wikiUrl) {
+        setPreviewUrl(wikiUrl);
+        return;
+      }
+    }
+
+    // All sources failed — show placeholder
+    setPreviewUrl(null);
+  }, [carId, fallbackUrl, imageError]);
+
+  const displayUrl = previewUrl;
+
+  if (!displayUrl) {
     // Placeholder with initials
     const initials = humanizeCarId(carId).slice(0, 3);
     return (
@@ -54,7 +87,7 @@ export const CarPreviewImage: React.FC<Props> = ({ carId, skinName, size = 40, s
   return (
     <div style={{ position: 'relative', display: 'inline-block', flexShrink: 0 }}>
       <img
-        src={previewUrl}
+        src={displayUrl}
         alt={humanizeCarId(carId)}
         style={{
           width,
@@ -65,6 +98,7 @@ export const CarPreviewImage: React.FC<Props> = ({ carId, skinName, size = 40, s
           background: 'var(--bg-card-hover)',
           display: 'block',
         }}
+        onError={handleImageError}
         onMouseEnter={() => showPopover && setShowFull(true)}
         onMouseLeave={() => setShowFull(false)}
       />
@@ -83,7 +117,7 @@ export const CarPreviewImage: React.FC<Props> = ({ carId, skinName, size = 40, s
           backdropFilter: 'blur(12px)',
         }}>
           <img
-            src={previewUrl}
+            src={displayUrl}
             alt={humanizeCarId(carId)}
             style={{ width: 320, height: 240, borderRadius: 'var(--radius-md)', objectFit: 'cover', display: 'block' }}
           />
