@@ -10,6 +10,19 @@ const COLORS = [
   'var(--chart-9)', 'var(--chart-10)', 'var(--chart-11)', 'var(--chart-12)',
 ];
 
+const TOOLTIP_STYLE = {
+  contentStyle: {
+    background: 'rgba(15, 15, 20, 0.95)',
+    border: '1px solid rgba(255,255,255,0.1)',
+    borderRadius: '12px',
+    backdropFilter: 'blur(20px)',
+    boxShadow: '0 8px 32px rgba(0,0,0,0.4)',
+    padding: '12px 16px',
+  },
+  itemStyle: { color: '#e0e0e0', fontSize: '0.8rem', padding: '2px 0' },
+  labelStyle: { color: '#999', fontSize: '0.75rem', marginBottom: 4, fontWeight: 600 },
+};
+
 interface Props {
   session: Session;
 }
@@ -39,7 +52,7 @@ export const LapTimesChart: React.FC<Props> = ({ session }) => {
       <h3>📈 {es.session.lapTimes}</h3>
       <ResponsiveContainer width="100%" height={400}>
         <LineChart data={data} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
-          <CartesianGrid strokeDasharray="3 3" stroke="var(--border-subtle)" />
+          <CartesianGrid strokeDasharray="3 3" stroke="var(--border-subtle)" strokeOpacity={0.08} />
           <XAxis
             dataKey="lap"
             stroke="var(--text-muted)"
@@ -53,29 +66,28 @@ export const LapTimesChart: React.FC<Props> = ({ session }) => {
             domain={['auto', 'auto']}
           />
           <Tooltip
-            contentStyle={{
-              background: 'var(--bg-glass)',
-              border: '1px solid var(--border-subtle)',
-              borderRadius: 'var(--radius-md)',
-              backdropFilter: 'blur(12px)',
-            }}
-            labelStyle={{ color: 'var(--text-secondary)', fontSize: 12 }}
+            {...TOOLTIP_STYLE}
             formatter={(value: number) => [formatLapTime(value * 1000), '']}
             labelFormatter={(label) => `Vuelta ${label}`}
           />
-          <Legend />
-          {driversToShow.map((p, i) => (
-            <Line
-              key={p.drivers[0]?.name ?? i}
-              type="monotone"
-              dataKey={p.drivers[0]?.name ?? `P${p.position}`}
-              stroke={COLORS[i % COLORS.length]}
-              strokeWidth={2}
-              dot={{ r: 3 }}
-              activeDot={{ r: 5 }}
-              connectNulls={false}
-            />
-          ))}
+          <Legend wrapperStyle={{ fontSize: '0.75rem', color: 'var(--text-muted)' }} />
+          {driversToShow.map((p, i) => {
+            const color = COLORS[i % COLORS.length];
+            return (
+              <Line
+                key={p.drivers[0]?.name ?? i}
+                type="natural"
+                dataKey={p.drivers[0]?.name ?? `P${p.position}`}
+                stroke={color}
+                strokeWidth={2.5}
+                dot={false}
+                activeDot={{ r: 6, strokeWidth: 2, stroke: 'white', fill: color }}
+                connectNulls={false}
+                animationDuration={1200}
+                animationEasing="ease-in-out"
+              />
+            );
+          })}
         </LineChart>
       </ResponsiveContainer>
     </div>

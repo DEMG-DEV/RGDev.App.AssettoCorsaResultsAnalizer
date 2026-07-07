@@ -1,11 +1,34 @@
 import React from 'react';
-import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell, CartesianGrid } from 'recharts';
 import type { Session } from '../../core/models/types';
 
 const TYRE_COLORS: Record<string, string> = {
-  S: '#FF1744', SM: '#FFD600', H: '#ECEFF1', SH: '#00B0FF',
-  SS: '#D500F9', SV: '#76FF03', V: '#8D6E63', E: '#00E676',
-  ST: '#FF9800', M: '#FFD600', HR: '#B71C1C',
+  S: '#FF1744',
+  SM: '#FF9100',
+  H: '#B0BEC5',
+  SH: '#78909C',
+  SS: '#D500F9',
+  SV: '#76FF03',
+  V: '#8D6E63',
+  E: '#00E676',
+  ST: '#FF6D00',
+  M: '#FFD600',
+  HR: '#B71C1C',
+  I: '#00E676',
+  W: '#2979FF',
+};
+
+const TOOLTIP_STYLE = {
+  contentStyle: {
+    background: 'rgba(15, 15, 20, 0.95)',
+    border: '1px solid rgba(255,255,255,0.1)',
+    borderRadius: '12px',
+    backdropFilter: 'blur(20px)',
+    boxShadow: '0 8px 32px rgba(0,0,0,0.4)',
+    padding: '12px 16px',
+  },
+  itemStyle: { color: '#e0e0e0', fontSize: '0.8rem', padding: '2px 0' },
+  labelStyle: { color: '#999', fontSize: '0.75rem', marginBottom: 4, fontWeight: 600 },
 };
 
 interface Props {
@@ -49,38 +72,71 @@ export const TyreStrategyTimeline: React.FC<Props> = ({ session }) => {
   // Get max stints
   const maxStints = Math.max(...data.map(d => d.stints.length), 0);
 
+  // Collect unique tyre compounds used
+  const usedCompounds = new Set<string>();
+  data.forEach(d => d.stints.forEach(s => usedCompounds.add(s.tyre)));
+
   return (
     <div className="chart-container">
       <h3>🛞 Estrategia de neumáticos</h3>
       <ResponsiveContainer width="100%" height={Math.max(250, driversToShow.length * 30)}>
         <BarChart data={barData} layout="vertical" margin={{ top: 5, right: 30, left: 100, bottom: 5 }}>
+          <CartesianGrid strokeOpacity={0.06} horizontal={false} />
           <XAxis type="number" stroke="var(--text-muted)" fontSize={12} />
           <YAxis type="category" dataKey="name" stroke="var(--text-muted)" fontSize={11} width={90} />
           <Tooltip
-            contentStyle={{
-              background: 'var(--bg-glass)',
-              border: '1px solid var(--border-subtle)',
-              borderRadius: 'var(--radius-md)',
-            }}
+            contentStyle={TOOLTIP_STYLE.contentStyle}
+            itemStyle={TOOLTIP_STYLE.itemStyle}
+            labelStyle={TOOLTIP_STYLE.labelStyle}
           />
           {Array.from({ length: maxStints }, (_, i) => (
-            <Bar key={i} dataKey={`stint${i}`} stackId="a" name={`Stint ${i + 1}`}>
+            <Bar
+              key={i}
+              dataKey={`stint${i}`}
+              stackId="a"
+              name={`Stint ${i + 1}`}
+              barSize={18}
+              radius={[0, 4, 4, 0]}
+              animationDuration={800}
+            >
               {barData.map((entry, idx) => {
                 const tyre = (entry[`tyre${i}`] as string) ?? '';
-                return <Cell key={idx} fill={TYRE_COLORS[tyre] ?? '#666'} />;
+                return <Cell key={idx} fill={TYRE_COLORS[tyre] ?? '#444'} />;
               })}
             </Bar>
           ))}
         </BarChart>
       </ResponsiveContainer>
-      {/* Tyre legend */}
-      <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', marginTop: 8, justifyContent: 'center' }}>
-        {Object.entries(TYRE_COLORS).slice(0, 8).map(([key, color]) => (
-          <div key={key} style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: '0.75rem' }}>
-            <div style={{ width: 12, height: 12, borderRadius: 3, background: color }} />
-            <span style={{ color: 'var(--text-muted)' }}>{key}</span>
-          </div>
-        ))}
+      {/* Tyre legend - pill-shaped chips */}
+      <div style={{ display: 'flex', gap: 14, flexWrap: 'wrap', marginTop: 10, justifyContent: 'center' }}>
+        {Array.from(usedCompounds)
+          .filter(key => TYRE_COLORS[key])
+          .map(key => (
+            <div
+              key={key}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 6,
+                fontSize: '0.78rem',
+                background: 'rgba(255,255,255,0.04)',
+                padding: '4px 10px',
+                borderRadius: '999px',
+                border: '1px solid rgba(255,255,255,0.06)',
+              }}
+            >
+              <div
+                style={{
+                  width: 10,
+                  height: 10,
+                  borderRadius: '50%',
+                  background: TYRE_COLORS[key],
+                  boxShadow: `0 0 4px ${TYRE_COLORS[key]}55`,
+                }}
+              />
+              <span style={{ color: 'var(--text-secondary)', fontWeight: 600 }}>{key}</span>
+            </div>
+          ))}
       </div>
     </div>
   );

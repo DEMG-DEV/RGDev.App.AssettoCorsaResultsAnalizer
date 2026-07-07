@@ -13,6 +13,19 @@ const DRIVER_COLORS = [
   'var(--chart-5)', 'var(--chart-6)', 'var(--chart-7)', 'var(--chart-8)',
 ];
 
+const TOOLTIP_STYLE = {
+  contentStyle: {
+    background: 'rgba(15, 15, 20, 0.95)',
+    border: '1px solid rgba(255,255,255,0.1)',
+    borderRadius: '12px',
+    backdropFilter: 'blur(20px)',
+    boxShadow: '0 8px 32px rgba(0,0,0,0.4)',
+    padding: '12px 16px',
+  },
+  itemStyle: { color: '#e0e0e0', fontSize: '0.8rem', padding: '2px 0' },
+  labelStyle: { color: '#999', fontSize: '0.75rem', marginBottom: 4, fontWeight: 600 },
+};
+
 /**
  * Radar/Spider chart comparing driver strengths:
  * Best Lap, Average Lap, Consistency, S1, S2, S3
@@ -88,15 +101,16 @@ export const ConsistencyRadar: React.FC<Props> = ({ session }) => {
             key={i}
             onClick={() => toggleDriver(i)}
             style={{
-              padding: '4px 10px',
+              padding: '6px 14px',
               borderRadius: 'var(--radius-full)',
               border: selected.includes(i) ? `2px solid ${DRIVER_COLORS[i % DRIVER_COLORS.length]}` : '1px solid var(--border-subtle)',
               background: selected.includes(i) ? `${DRIVER_COLORS[i % DRIVER_COLORS.length]}22` : 'transparent',
               color: selected.includes(i) ? DRIVER_COLORS[i % DRIVER_COLORS.length] : 'var(--text-muted)',
-              fontSize: '0.72rem',
-              fontWeight: 600,
+              fontSize: '0.78rem',
+              fontWeight: 700,
               cursor: 'pointer',
               transition: 'all 0.2s ease',
+              letterSpacing: '0.01em',
             }}
           >
             {p.drivers[0]?.name ?? `P${p.position}`}
@@ -106,27 +120,29 @@ export const ConsistencyRadar: React.FC<Props> = ({ session }) => {
 
       <ResponsiveContainer width="100%" height={350}>
         <RadarChart data={radarData} cx="50%" cy="50%" outerRadius="70%">
-          <PolarGrid stroke="var(--border-subtle)" />
-          <PolarAngleAxis dataKey="axis" tick={{ fill: 'var(--text-secondary)', fontSize: 11 }} />
-          <PolarRadiusAxis angle={30} domain={[0, 100]} tick={{ fill: 'var(--text-muted)', fontSize: 9 }} />
-          {selected.map((driverIdx) => (
-            <Radar
-              key={driverIdx}
-              name={driverNames[driverIdx] ?? ''}
-              dataKey={`driver_${driverIdx}`}
-              stroke={DRIVER_COLORS[driverIdx % DRIVER_COLORS.length]}
-              fill={DRIVER_COLORS[driverIdx % DRIVER_COLORS.length]}
-              fillOpacity={0.15}
-              strokeWidth={2}
-            />
-          ))}
+          <PolarGrid stroke="rgba(255,255,255,0.1)" />
+          <PolarAngleAxis dataKey="axis" tick={{ fill: 'var(--text-secondary)', fontSize: 12, fontWeight: 600 }} />
+          <PolarRadiusAxis angle={30} domain={[0, 100]} tick={false} />
+          {selected.map((driverIdx) => {
+            const color = DRIVER_COLORS[driverIdx % DRIVER_COLORS.length];
+            return (
+              <Radar
+                key={driverIdx}
+                name={driverNames[driverIdx] ?? ''}
+                dataKey={`driver_${driverIdx}`}
+                stroke={color}
+                fill={color}
+                fillOpacity={0.15}
+                strokeWidth={2.5}
+                dot={{ r: 4, fill: color, stroke: 'white', strokeWidth: 1.5 }}
+                animationDuration={1000}
+              />
+            );
+          })}
           <Tooltip
-            contentStyle={{
-              background: 'var(--bg-glass)',
-              border: '1px solid var(--border-subtle)',
-              borderRadius: 'var(--radius-md)',
-              backdropFilter: 'blur(12px)',
-            }}
+            contentStyle={TOOLTIP_STYLE.contentStyle}
+            itemStyle={TOOLTIP_STYLE.itemStyle}
+            labelStyle={TOOLTIP_STYLE.labelStyle}
           />
           <Legend />
         </RadarChart>
