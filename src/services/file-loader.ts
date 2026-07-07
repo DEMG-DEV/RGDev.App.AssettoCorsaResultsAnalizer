@@ -24,7 +24,7 @@ export async function loadFiles(
   onProgress?: (current: number, total: number) => void,
 ): Promise<ParseResult[]> {
   const results: ParseResult[] = [];
-  const allFiles: Array<{ name: string; content: string; size: number }> = [];
+  const allFiles: Array<{ name: string; content: string; size: number; lastModified?: number }> = [];
 
   // First pass: extract ZIPs and collect all JSONs
   for (const file of files) {
@@ -37,7 +37,12 @@ export async function loadFiles(
 
         for (const [name, zipEntry] of jsonFiles) {
           const content = await zipEntry.async('string');
-          allFiles.push({ name, content, size: content.length });
+          allFiles.push({
+            name,
+            content,
+            size: content.length,
+            lastModified: zipEntry.date ? new Date(zipEntry.date).getTime() : Date.now(),
+          });
         }
       } catch {
         results.push({
@@ -51,7 +56,12 @@ export async function loadFiles(
       }
     } else if (file.name.toLowerCase().endsWith('.json')) {
       const content = await file.text();
-      allFiles.push({ name: file.name, content, size: file.size });
+      allFiles.push({
+        name: file.name,
+        content,
+        size: file.size,
+        lastModified: file.lastModified,
+      });
     }
   }
 
@@ -60,6 +70,10 @@ export async function loadFiles(
     const f = allFiles[i]!;
     onProgress?.(i + 1, allFiles.length);
     const result = parseJsonFile(f.content, f.name, f.size);
+    // Merge the file's lastModified date if parsed results don't have one
+    if (result.sessionDate === undefined && f.lastModified) {
+      result.sessionDate = new Date(f.lastModified);
+    }
     results.push(result);
   }
 
@@ -72,6 +86,7 @@ export async function loadFiles(
       fileName: f.name,
       content: f.content,
       fileSize: f.size,
+      lastModified: f.lastModified,
     })));
   }
 

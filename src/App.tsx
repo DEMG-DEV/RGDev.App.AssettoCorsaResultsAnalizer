@@ -6,6 +6,7 @@ import { SessionCard } from './components/session-list/SessionCard';
 import { SessionDashboard } from './components/session/SessionDashboard';
 import { DriverDetailView } from './components/driver/DriverDetailView';
 import { HistoryDashboard } from './components/history/HistoryDashboard';
+import { TrackRecordsView } from './components/shared/TrackRecordsView';
 import { getCachedFiles } from './services/session-cache';
 import { parseJsonFile } from './core/parsers/format-detector';
 import { es } from './i18n/es';
@@ -177,6 +178,11 @@ const App: React.FC = () => {
       {/* History View */}
       {view === 'history' && (
         <HistoryDashboard />
+      )}
+
+      {/* Track Records View */}
+      {view === 'track-records' && (
+        <TrackRecordsView />
       )}
     </AppShell>
   );
