@@ -8,6 +8,7 @@ import type {
   ParseResult, Session, SessionType, Participant, Lap,
   SectorTime, Driver, Vehicle, Track, Incident, FinishStatus,
 } from '../models/types';
+import { parseFilenameDate } from '../utils/time-formatter';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 type RawData = Record<string, any>;
@@ -220,6 +221,7 @@ export function parseAcServerJson(
     fileName,
     fileSize,
     parsedAt: new Date(),
+    sessionDate: parseFilenameDate(fileName) ?? new Date(),
     sessions: [session],
     warnings,
     errors: [],

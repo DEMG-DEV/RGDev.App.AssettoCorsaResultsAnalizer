@@ -114,10 +114,8 @@ export function computeHistoryStats(results: ParseResult[]): HistoryStats {
     for (const session of result.sessions) {
       totalSessions++;
 
-      // Track frequency
-      const trackKey = session.track.course
-        ? `${session.track.venue}/${session.track.course}`
-        : session.track.venue;
+      // Track frequency (unified by venue name)
+      const trackKey = session.track.venue;
       trackFrequency.set(trackKey, (trackFrequency.get(trackKey) ?? 0) + 1);
 
       // Session type

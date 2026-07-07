@@ -56,24 +56,61 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 }
 
 /**
+ * Parse a Content Manager session filename (YYMMDD-HHMMSS.json) into a Date.
+ */
+function parseFilenameDate(filename: string): Date | null {
+  const match = filename.match(/^(\d{2})(\d{2})(\d{2})-(\d{2})(\d{2})(\d{2})\.json$/);
+  if (!match) return null;
+
+  const [, yy, mm, dd, hh, mi, ss] = match;
+  const year = 2000 + parseInt(yy!, 10);
+  const month = parseInt(mm!, 10) - 1; // 0-indexed
+  const day = parseInt(dd!, 10);
+  const hour = parseInt(hh!, 10);
+  const minute = parseInt(mi!, 10);
+  const second = parseInt(ss!, 10);
+
+  return new Date(year, month, day, hour, minute, second);
+}
+
+/**
+ * Try to extract actual session date from raw session JSON content.
+ */
+function extractSessionDate(content: string, fileName: string, fallbackDate: Date): Date {
+  try {
+    const data = JSON.parse(content);
+    
+    // 1. Try __quickDrive -> dtv (Content Manager client format)
+    if (data && typeof data.__quickDrive === 'string') {
+      const qd = JSON.parse(data.__quickDrive);
+      if (qd && qd.dtv) {
+        return new Date(qd.dtv);
+      }
+    }
+
+    // 2. Try __raceIni -> TEMPERATURE -> TIME or similar (none of these is a full ISO string, so we skip)
+
+    // 3. Try filename pattern (Content Manager default filenames: YYMMDD-HHMMSS.json)
+    const fileDate = parseFilenameDate(fileName);
+    if (fileDate) return fileDate;
+  } catch {
+    // Ignore JSON parsing errors, fall back
+  }
+  return fallbackDate;
+}
+
+/**
  * GET — List all cached sessions with their content.
  */
 async function handleGet(res: VercelResponse) {
   const token = process.env.BLOB_READ_WRITE_TOKEN!;
   const { blobs } = await list({ prefix: BLOB_PREFIX, token });
 
-  // Sort newest first
-  const sorted = blobs.sort(
-    (a, b) => new Date(b.uploadedAt).getTime() - new Date(a.uploadedAt).getTime()
-  );
-
   // Fetch content for each blob in parallel
   const sessions = await Promise.all(
-    sorted.map(async (blob) => {
+    blobs.map(async (blob) => {
       try {
-        // For public stores, direct blob.url works perfectly (no signed query param required)
         const downloadUrl = blob.url;
-
         const response = await fetch(downloadUrl);
         if (!response.ok) {
           console.error(`[API] Blob fetch failed: ${response.status} for ${blob.pathname}`);
@@ -90,11 +127,15 @@ async function handleGet(res: VercelResponse) {
         }
 
         const fileName = blob.pathname.replace(BLOB_PREFIX, '');
+        
+        // Extract the actual session date from the JSON or filename, fallback to uploadedAt
+        const sessionDate = extractSessionDate(content, fileName, new Date(blob.uploadedAt));
+
         return {
           fileName,
           content,
           fileSize: blob.size,
-          cachedAt: new Date(blob.uploadedAt).getTime(),
+          cachedAt: sessionDate.getTime(), // Overwrite cachedAt to represent session time for sorting
         };
       } catch (err) {
         console.error(`[API] Error fetching blob ${blob.pathname}:`, err);
@@ -104,7 +145,11 @@ async function handleGet(res: VercelResponse) {
   );
 
   const validSessions = sessions.filter(Boolean);
-  return res.status(200).json({ sessions: validSessions, count: validSessions.length });
+  
+  // Sort descending by actual session date (cachedAt)
+  const sortedSessions = validSessions.sort((a, b) => b!.cachedAt - a!.cachedAt);
+
+  return res.status(200).json({ sessions: sortedSessions, count: sortedSessions.length });
 }
 
 /**
