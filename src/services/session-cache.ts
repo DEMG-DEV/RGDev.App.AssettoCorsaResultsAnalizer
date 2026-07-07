@@ -1,98 +1,153 @@
 /**
- * Session Cache Service — shared storage via Vercel Blob API.
+ * Session Cache Service — hybrid shared + local storage.
  *
- * All users share the same cache. The last 20 uploaded JSON files
- * are persisted; older files are automatically removed (FIFO).
+ * Strategy:
+ * 1. Try the Vercel Blob API (/api/sessions) for shared storage
+ * 2. If the API fails (not deployed, no token, etc.), fall back to localStorage
  *
- * Communicates with the serverless function at /api/sessions.
+ * The last 20 uploaded JSON files are persisted; older files are automatically
+ * removed (FIFO).
  */
 
 const API_BASE = '/api/sessions';
+const STORAGE_KEY = 'ac-session-cache';
+const MAX_CACHED_FILES = 20;
 
 /** A single cached file entry */
 export interface CachedFile {
-  /** Original file name */
   fileName: string;
-  /** Raw JSON text content */
   content: string;
-  /** File size in bytes */
   fileSize: number;
-  /** Timestamp when cached */
   cachedAt: number;
 }
 
-/**
- * Fetch all cached files from the shared API.
- * Returns an empty array on error.
- */
-export async function getCachedFiles(): Promise<CachedFile[]> {
+// ─── Helpers ────────────────────────────────────────────────────────────────
+
+/** Check if the API is reachable (cached per session). */
+let _apiAvailable: boolean | null = null;
+
+async function isApiAvailable(): Promise<boolean> {
+  if (_apiAvailable !== null) return _apiAvailable;
   try {
-    const res = await fetch(API_BASE);
-    if (!res.ok) return [];
-    const data = await res.json();
-    return (data.sessions ?? []) as CachedFile[];
+    const res = await fetch(API_BASE, { method: 'GET' });
+    _apiAvailable = res.ok;
+  } catch {
+    _apiAvailable = false;
+  }
+  return _apiAvailable;
+}
+
+// ─── localStorage helpers ───────────────────────────────────────────────────
+
+function localGet(): CachedFile[] {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw) as CachedFile[];
+    return Array.isArray(parsed) ? parsed : [];
   } catch {
     return [];
   }
 }
 
+function localSet(cache: CachedFile[]): void {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(cache));
+  } catch {
+    console.warn('[SessionCache] localStorage write failed');
+  }
+}
+
+// ─── Public API ─────────────────────────────────────────────────────────────
+
 /**
- * Upload files to the shared cache.
- * The API enforces the 20-file FIFO limit server-side.
+ * Fetch all cached files.
+ */
+export async function getCachedFiles(): Promise<CachedFile[]> {
+  if (await isApiAvailable()) {
+    try {
+      const res = await fetch(API_BASE);
+      if (res.ok) {
+        const data = await res.json();
+        return (data.sessions ?? []) as CachedFile[];
+      }
+    } catch { /* fall through */ }
+  }
+  return localGet();
+}
+
+/**
+ * Upload files to the cache (max 20, FIFO).
  */
 export async function addToCache(
   files: Array<{ fileName: string; content: string; fileSize: number }>,
 ): Promise<void> {
-  try {
-    // Upload in parallel (the API handles deduplication and FIFO)
-    await Promise.all(
-      files.map((file) =>
-        fetch(API_BASE, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(file),
-        })
-      ),
-    );
-  } catch {
-    console.warn('[SessionCache] Failed to upload to shared cache');
+  if (await isApiAvailable()) {
+    try {
+      await Promise.all(
+        files.map((file) =>
+          fetch(API_BASE, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(file),
+          })
+        ),
+      );
+      return;
+    } catch { /* fall through to local */ }
   }
+
+  // localStorage fallback
+  let cache = localGet();
+  for (const file of files) {
+    cache = cache.filter(c => c.fileName !== file.fileName);
+    cache.push({ ...file, cachedAt: Date.now() });
+  }
+  if (cache.length > MAX_CACHED_FILES) {
+    cache.sort((a, b) => a.cachedAt - b.cachedAt);
+    cache = cache.slice(cache.length - MAX_CACHED_FILES);
+  }
+  localSet(cache);
 }
 
 /**
  * Remove a specific cached file by fileName.
  */
 export async function removeFromCache(fileName: string): Promise<void> {
-  try {
-    await fetch(`${API_BASE}?file=${encodeURIComponent(fileName)}`, {
-      method: 'DELETE',
-    });
-  } catch {
-    // ignore
+  if (await isApiAvailable()) {
+    try {
+      await fetch(`${API_BASE}?file=${encodeURIComponent(fileName)}`, { method: 'DELETE' });
+      return;
+    } catch { /* fall through */ }
   }
+  localSet(localGet().filter(c => c.fileName !== fileName));
 }
 
 /**
- * Clear the entire shared session cache.
+ * Clear the entire session cache.
  */
 export async function clearCache(): Promise<void> {
-  try {
-    await fetch(`${API_BASE}?all=true`, { method: 'DELETE' });
-  } catch {
-    // ignore
+  if (await isApiAvailable()) {
+    try {
+      await fetch(`${API_BASE}?all=true`, { method: 'DELETE' });
+    } catch { /* ignore */ }
   }
+  // Always clear local too
+  try { localStorage.removeItem(STORAGE_KEY); } catch { /* ignore */ }
 }
 
 /**
  * Get the number of cached files.
  */
 export async function getCacheCount(): Promise<number> {
-  try {
-    const res = await fetch(API_BASE);
-    if (!res.ok) return 0;
-    const data = await res.json();
-    return data.count ?? 0;
-  } catch {
-    return 0;
+  if (await isApiAvailable()) {
+    try {
+      const res = await fetch(API_BASE);
+      if (res.ok) {
+        const data = await res.json();
+        return data.count ?? 0;
+      }
+    } catch { /* fall through */ }
   }
+  return localGet().length;
 }
