@@ -84,7 +84,7 @@ export async function addToCache(
 
   // Then try remote in background
   try {
-    const results = await Promise.all(
+    await Promise.all(
       files.map(async (file) => {
         const res = await fetch(API_BASE, {
           method: 'POST',
@@ -98,9 +98,7 @@ export async function addToCache(
         return res.ok;
       }),
     );
-    if (results.some(Boolean)) {
-      console.info('[SessionCache] Saved to shared storage');
-    }
+    // Removed console.info
   } catch (e) {
     console.warn('[SessionCache] API unreachable, saved to localStorage only', e);
   }

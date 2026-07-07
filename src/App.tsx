@@ -25,9 +25,7 @@ const App: React.FC = () => {
     (async () => {
       setLoading(true);
       try {
-        console.info('[AutoLoad] Fetching cached sessions...');
         const cached = await getCachedFiles();
-        console.info(`[AutoLoad] Found ${cached.length} cached files`);
 
         if (cached.length === 0) {
           setLoading(false);
@@ -36,14 +34,10 @@ const App: React.FC = () => {
 
         const parsedResults = cached.map((file, i) => {
           setLoadingProgress(i + 1, cached.length);
-          console.info(`[AutoLoad] File "${file.fileName}": content length=${file.content?.length ?? 0}, preview="${String(file.content).slice(0, 200)}"`);
-          const result = parseJsonFile(file.content, file.fileName, file.fileSize);
-          console.info(`[AutoLoad] File "${file.fileName}": parsed ${result.sessions.length} sessions, errors: ${result.errors.length > 0 ? result.errors.join('; ') : 'none'}`);
-          return result;
+          return parseJsonFile(file.content, file.fileName, file.fileSize);
         });
 
         const validResults = parsedResults.filter(r => r.sessions.length > 0);
-        console.info(`[AutoLoad] Parsed ${validResults.length} valid results from ${cached.length} files`);
 
         if (validResults.length > 0) {
           addResults(validResults);
