@@ -73,7 +73,9 @@ async function handleGet(res: VercelResponse) {
   const sessions = await Promise.all(
     sorted.map(async (blob) => {
       try {
-        const response = await fetch(blob.url);
+        // Use downloadUrl for private blobs (includes signed token)
+        const downloadUrl = blob.downloadUrl ?? blob.url;
+        const response = await fetch(downloadUrl);
         const content = await response.text();
         const fileName = blob.pathname.replace(BLOB_PREFIX, '');
         return {
@@ -136,7 +138,7 @@ async function handlePost(req: VercelRequest, res: VercelResponse) {
 
   // Upload the new file
   const blob = await put(`${BLOB_PREFIX}${fileName}`, content, {
-    access: 'public',
+    access: 'private',
     contentType: 'application/json',
     token,
   });
