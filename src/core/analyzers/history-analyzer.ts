@@ -29,6 +29,18 @@ export interface PodiumRates {
   dnfRate: number;
 }
 
+/** Championship standing of a driver */
+export interface ChampionshipStanding {
+  driverName: string;
+  points: number;
+  racesCount: number;
+  winsCount: number;
+  podiumsCount: number;
+  bestFinish: number;
+  avgPosition: number;
+  cars: string[]; // unique list of car IDs
+}
+
 export interface HistoryStats {
   totalSessions: number;
   totalLaps: number;
@@ -48,6 +60,8 @@ export interface HistoryStats {
   aiLevelHistogram: Map<number, number>;
   /** Box plot data per track */
   boxPlotData: BoxPlotData[];
+  /** Consolidated championship leaderboard standings */
+  championshipStandings: ChampionshipStanding[];
 }
 
 /** Compute quartiles for an array of numbers (must be pre-sorted) */
@@ -60,6 +74,8 @@ function quantile(sorted: number[], q: number): number {
   }
   return sorted[base]!;
 }
+
+const F1_POINTS = [25, 18, 15, 12, 10, 8, 6, 4, 2, 1];
 
 /**
  * Compute history analytics across multiple parse results.
@@ -74,6 +90,16 @@ export function computeHistoryStats(results: ParseResult[]): HistoryStats {
   const trackLapTimes = new Map<string, number[]>(); // for box plots
   let totalLaps = 0;
   let totalSessions = 0;
+
+  // Championship accumulation map by driver name
+  const standingsMap = new Map<string, {
+    points: number;
+    racesCount: number;
+    winsCount: number;
+    podiumsCount: number;
+    positions: number[];
+    cars: Set<string>;
+  }>();
 
   // Podium tracking
   let totalRaces = 0;
@@ -123,13 +149,45 @@ export function computeHistoryStats(results: ParseResult[]): HistoryStats {
         }
       }
 
-      // Car usage + total laps
+      // Car usage + total laps + championship standing updates
       for (const p of session.participants) {
         totalLaps += p.totalLaps;
 
         // Only count player's car (position 1 or first participant typically)
         if (p.position === 1 || session.participants.indexOf(p) === 0) {
           carUsage.set(p.vehicle.modelId, (carUsage.get(p.vehicle.modelId) ?? 0) + 1);
+        }
+
+        // Championship standing logic for all drivers in the session
+        const driverName = p.drivers[0]?.name ?? 'Driver';
+        let driverData = standingsMap.get(driverName);
+        if (!driverData) {
+          driverData = {
+            points: 0,
+            racesCount: 0,
+            winsCount: 0,
+            podiumsCount: 0,
+            positions: [],
+            cars: new Set<string>(),
+          };
+          standingsMap.set(driverName, driverData);
+        }
+
+        driverData.cars.add(p.vehicle.modelId);
+        
+        if (session.type === 'race') {
+          driverData.racesCount++;
+          driverData.positions.push(p.position);
+          
+          // Points award
+          const pts = F1_POINTS[p.position - 1] ?? 0;
+          driverData.points += pts;
+          
+          if (p.position === 1) driverData.winsCount++;
+          if (p.position <= 3) driverData.podiumsCount++;
+        } else {
+          // Non-race session entries (qualifying/practice) — still track participation
+          driverData.positions.push(p.position);
         }
       }
 
@@ -198,6 +256,32 @@ export function computeHistoryStats(results: ParseResult[]): HistoryStats {
     });
   }
 
+  // Convert standingsMap to ChampionshipStanding[]
+  const championshipStandings: ChampionshipStanding[] = Array.from(standingsMap.entries()).map(([driverName, d]) => {
+    const totalPos = d.positions.reduce((sum, val) => sum + val, 0);
+    const avgPosition = d.positions.length > 0 ? totalPos / d.positions.length : 0;
+    const bestFinish = d.positions.length > 0 ? Math.min(...d.positions) : 99;
+
+    return {
+      driverName,
+      points: d.points,
+      racesCount: d.racesCount,
+      winsCount: d.winsCount,
+      podiumsCount: d.podiumsCount,
+      bestFinish,
+      avgPosition,
+      cars: Array.from(d.cars),
+    };
+  });
+
+  // Sort standings: Points descending. Ties broken by wins, then podiums, then best finish
+  championshipStandings.sort((a, b) => {
+    if (b.points !== a.points) return b.points - a.points;
+    if (b.winsCount !== a.winsCount) return b.winsCount - a.winsCount;
+    if (b.podiumsCount !== a.podiumsCount) return b.podiumsCount - a.podiumsCount;
+    return a.bestFinish - b.bestFinish;
+  });
+
   return {
     totalSessions,
     totalLaps,
@@ -209,5 +293,6 @@ export function computeHistoryStats(results: ParseResult[]): HistoryStats {
     podiumRates,
     aiLevelHistogram,
     boxPlotData,
+    championshipStandings,
   };
 }
