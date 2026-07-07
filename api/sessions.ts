@@ -11,7 +11,7 @@
  */
 
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { list, put, del } from '@vercel/blob';
+import { list, put, del, head } from '@vercel/blob';
 
 const MAX_FILES = 20;
 const BLOB_PREFIX = 'ac-sessions/';
@@ -59,10 +59,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
  * GET — List all cached sessions with their content.
  */
 async function handleGet(res: VercelResponse) {
-  const { blobs } = await list({
-    prefix: BLOB_PREFIX,
-    token: process.env.BLOB_READ_WRITE_TOKEN,
-  });
+  const token = process.env.BLOB_READ_WRITE_TOKEN!;
+  const { blobs } = await list({ prefix: BLOB_PREFIX, token });
 
   // Sort newest first
   const sorted = blobs.sort(
@@ -73,10 +71,34 @@ async function handleGet(res: VercelResponse) {
   const sessions = await Promise.all(
     sorted.map(async (blob) => {
       try {
-        // Use downloadUrl for private blobs (includes signed token)
-        const downloadUrl = blob.downloadUrl ?? blob.url;
+        // For private blobs, try downloadUrl first, then fall back to head()
+        let downloadUrl = blob.downloadUrl;
+
+        // If no downloadUrl from list(), get it via head()
+        if (!downloadUrl) {
+          try {
+            const headResult = await head(blob.url, { token });
+            downloadUrl = headResult.downloadUrl;
+          } catch {
+            downloadUrl = blob.url;
+          }
+        }
+
         const response = await fetch(downloadUrl);
+        if (!response.ok) {
+          console.error(`[API] Blob fetch failed: ${response.status} for ${blob.pathname}`);
+          return null;
+        }
+
         const content = await response.text();
+
+        // Verify content is JSON (not an HTML error page)
+        const trimmed = content.trim();
+        if (!trimmed.startsWith('{') && !trimmed.startsWith('[')) {
+          console.error(`[API] Blob content is not JSON for ${blob.pathname}: ${trimmed.slice(0, 100)}`);
+          return null;
+        }
+
         const fileName = blob.pathname.replace(BLOB_PREFIX, '');
         return {
           fileName,
@@ -84,7 +106,8 @@ async function handleGet(res: VercelResponse) {
           fileSize: blob.size,
           cachedAt: new Date(blob.uploadedAt).getTime(),
         };
-      } catch {
+      } catch (err) {
+        console.error(`[API] Error fetching blob ${blob.pathname}:`, err);
         return null;
       }
     })

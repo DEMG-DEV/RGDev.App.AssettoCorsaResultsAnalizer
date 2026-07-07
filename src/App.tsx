@@ -35,7 +35,10 @@ const App: React.FC = () => {
 
         const parsedResults = cached.map((file, i) => {
           setLoadingProgress(i + 1, cached.length);
-          return parseJsonFile(file.content, file.fileName, file.fileSize);
+          console.info(`[AutoLoad] File "${file.fileName}": content length=${file.content?.length ?? 0}, preview="${String(file.content).slice(0, 200)}"`);
+          const result = parseJsonFile(file.content, file.fileName, file.fileSize);
+          console.info(`[AutoLoad] File "${file.fileName}": parsed ${result.sessions.length} sessions, errors: ${result.errors.length > 0 ? result.errors.join('; ') : 'none'}`);
+          return result;
         });
 
         const validResults = parsedResults.filter(r => r.sessions.length > 0);
