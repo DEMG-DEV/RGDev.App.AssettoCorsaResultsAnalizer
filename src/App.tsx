@@ -5,7 +5,6 @@ import { FileDropZone } from './components/file-input/FileDropZone';
 import { SessionCard } from './components/session-list/SessionCard';
 import { SessionDashboard } from './components/session/SessionDashboard';
 import { DriverDetailView } from './components/driver/DriverDetailView';
-import { HistoryDashboard } from './components/history/HistoryDashboard';
 import { TrackRecordsView } from './components/shared/TrackRecordsView';
 import { getCachedFiles } from './services/session-cache';
 import { parseJsonFile } from './core/parsers/format-detector';
@@ -167,11 +166,6 @@ const App: React.FC = () => {
       {/* Driver View */}
       {view === 'driver' && selectedSession && selectedDriverIndex !== null && (
         <DriverDetailView participant={selectedSession.participants[selectedDriverIndex]!} />
-      )}
-
-      {/* History View */}
-      {view === 'history' && (
-        <HistoryDashboard />
       )}
 
       {/* Track Records View */}
