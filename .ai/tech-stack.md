@@ -1,6 +1,6 @@
 # Tech Stack
 
-## Runtime & Build
+## Client Runtime & Build
 
 | Layer          | Technology           | Version  | Purpose                                    |
 |----------------|----------------------|----------|--------------------------------------------|
@@ -8,8 +8,8 @@
 | Runtime        | Node.js              | 20+ LTS  | Build tooling, dev server                  |
 | Bundler        | Vite                 | 6.x      | Fast dev server, HMR, optimized builds     |
 | Framework      | React                | 19.x     | Component-based UI                         |
-| Routing        | React Router         | 7.x      | Client-side navigation                     |
 | State Mgmt     | Zustand              | 5.x      | Lightweight global state                   |
+| Package Manager| pnpm                 | 9.x      | Fast, space-efficient package installation |
 
 ## UI & Styling
 
@@ -17,76 +17,41 @@
 |----------------|----------------------|----------|--------------------------------------------|
 | CSS            | Vanilla CSS          | —        | Full control, CSS custom properties        |
 | Icons          | Lucide React         | latest   | Consistent icon set                        |
-| Font           | Inter (Google Fonts) | —        | Modern, highly-readable sans-serif         |
-| Charts         | Recharts             | 2.x      | Lap time charts, position charts           |
-| Tables         | TanStack Table       | 8.x      | Sortable, filterable data tables           |
+| Font           | Inter / JetBrains Mono | —      | Modern sans-serif & monospace for lap times |
+| Charts         | Recharts             | 2.x      | Premium F1-broadcast style charts          |
 
-## File Handling
+## Backend & Persistence (Serverless)
 
-| Library        | Purpose                                                  |
-|----------------|----------------------------------------------------------|
-| JSZip          | Extract .zip archives containing multiple JSON files     |
-| File System Access API | Desktop: browse folders (with fallback to `<input>`) |
+| Service        | Technology           | Package                | Purpose                                     |
+|----------------|----------------------|------------------------|---------------------------------------------|
+| Hosting        | Vercel               | —                      | Production SPA hosting                      |
+| API Runtime    | Vercel Functions     | `@vercel/node`         | Serverless endpoint `/api/sessions`        |
+| Shared Cache   | Vercel Blob          | `@vercel/blob`         | Global FIFO storage of last 20 JSON uploads |
+| Analytics      | Vercel Web Analytics | `@vercel/analytics`    | Visitor traffic & pageview metrics          |
 
-## Cross-Platform Strategy
+## Persistence & Image Strategy
 
-### Web (Primary)
-- Standard Vite + React SPA
-- Progressive Web App (PWA) with service worker for offline capability
-- File System Access API for folder selection on supported browsers (Chrome, Edge)
-- Fallback: `<input type="file" multiple accept=".json,.zip">` for Safari/Firefox
+### Hybrid Session Caching
+- **Primary**: Vercel Blob storage API storing JSON blobs (enforcing a 20-file limit FIFO).
+- **Secondary**: Local browser `localStorage` acting as an instant/offline fallback if the Vercel Blob token is missing or if the serverless function fails.
 
-### Desktop (Secondary)
-- **Tauri 2.x** wrapper around the web app
-- Native file dialogs and folder access
-- Auto-discovery of `Documents\Assetto Corsa\out\race_out.json`
-- System tray integration (optional, future)
-- Targets: Windows (primary), macOS, Linux
+### Car Image Resolution
+- **Official Cars**: Static image catalog mapping official Assetto Corsa vehicle IDs to pre-resolved Wikimedia Commons URLs.
+- **Mod Cars**: Dynamic integration via the Wikipedia API. The system humanizes mod IDs (e.g. `ks_porsche_919_hybrid_2016` -> `Porsche 919 Hybrid 2016`), searches Wikipedia articles, and caches the returned thumbnail URLs.
 
-### Mobile (Tertiary)
-- PWA installable on Android/iOS (no native app needed initially)
-- File upload only (no local folder scanning — AC doesn't run on mobile)
-- Touch-optimized responsive layout
-- If native app needed later: **Capacitor** wrapping the same web app
-
-## Development Tools
-
-| Tool               | Purpose                                      |
-|--------------------|----------------------------------------------|
-| ESLint             | Code linting (strict TypeScript rules)       |
-| Prettier           | Code formatting                              |
-| Vitest             | Unit testing (Vite-native)                   |
-| Playwright         | E2E testing                                  |
-| Storybook (opt.)   | Component development in isolation           |
-
-## Deployment
+## Development & Deployment
 
 | Target     | Method                                         |
 |------------|------------------------------------------------|
-| Web        | Static hosting (Vercel / Netlify / GitHub Pages) |
-| Desktop    | Tauri build → `.msi` (Windows), `.dmg` (macOS) |
-| Mobile     | PWA (add to home screen)                       |
+| Web        | Automatic Vercel deployment (Git integration)   |
 
 ## Key Architecture Decisions
 
-### Why Vite + React (not Next.js)?
-- No server-side rendering needed — all data is local/client-side
-- Simpler deployment (static files)
-- Better Tauri integration (no Node.js server)
-- Faster build times
+### Why React SPA + Vercel Blob?
+- Static frontend with instant loading.
+- Serverless API requires no dedicated server infrastructure.
+- Shared storage is accessible to all users globally without account management.
 
-### Why Zustand (not Redux)?
-- Minimal boilerplate for our scope
-- First-class TypeScript support
-- No action/reducer ceremony for simple state trees
-
-### Why Tauri (not Electron)?
-- Much smaller binary size (~5MB vs ~150MB)
-- Better performance (Rust backend)
-- Native OS file dialogs
-- Lower memory usage
-
-### Why Recharts?
-- React-first library (composable, declarative)
-- Good TypeScript support
-- Handles our chart needs: line charts (lap times), bar charts (sectors), scatter plots (consistency)
+### Why pnpm?
+- Extremely fast installation and space-saving package management.
+- Guarantees strict dependency resolution preventing ghost dependencies.
