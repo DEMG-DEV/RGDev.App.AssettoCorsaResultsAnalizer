@@ -48,7 +48,7 @@ export const TrackRecordsCharts: React.FC<Props> = ({ records }) => {
   }));
 
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))', gap: 'var(--space-lg)', marginBottom: 'var(--space-lg)' }}>
+    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 'var(--space-lg)', marginBottom: 'var(--space-lg)' }}>
       {/* Sector Comparison Chart */}
       <div className="chart-container" style={{ padding: 'var(--space-lg)' }}>
         <h3 style={{ marginTop: 0, marginBottom: 'var(--space-md)', fontSize: '1rem', color: 'var(--text-primary)' }}>

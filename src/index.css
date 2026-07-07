@@ -6,14 +6,14 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&family=Outfit:wght@600;700;800&display=swap');
 
 /* === CSS Custom Properties (Design Tokens) === */
-/* Default theme: Ferrari 🐎 Rosso Corsa — Pantone 185 C */
-:root,
-[data-theme="ferrari"] {
+/* === CSS Custom Properties (Design Tokens) === */
+/* Premium Apple-Pro Dark Mode — Ferrari Red Accent */
+:root {
   /* Brand identity — Pantone 185 C (#E4002B) */
   --brand-primary: #E4002B;
   --brand-secondary: #FFD700;
   --brand-accent: #E4002B;
-  --brand-glow: rgba(228, 0, 43, 0.25);
+  --brand-glow: rgba(228, 0, 43, 0.4);
 
   /* Position colors */
   --color-p1: #FFD700;
@@ -27,46 +27,46 @@
   --color-s3: #2ECC71;
 
   /* Delta / performance */
-  --color-faster: #00C853;
-  --color-slower: #D50000;
+  --color-faster: #00E676;
+  --color-slower: #FF1744;
   --color-neutral: #607D8B;
   --color-pb: #D500F9;
   --color-best: #E4002B;
 
   /* Finish status */
-  --color-finished: #2E7D32;
-  --color-dnf: #D84315;
-  --color-dq: #C62828;
-  --color-none: #757575;
+  --color-finished: #00E676;
+  --color-dnf: #FF6D00;
+  --color-dq: #FF1744;
+  --color-none: #546E7A;
 
-  /* Backgrounds — Light & Bright */
-  --bg-primary: #FEF2F2;
-  --bg-secondary: #FEE2E2;
-  --bg-card: #FFFFFF;
-  --bg-card-hover: #FEF2F2;
-  --bg-glass: rgba(255, 255, 255, 0.88);
-  --bg-input: #FFFFFF;
-  --border-subtle: rgba(228, 0, 43, 0.15);
+  /* Backgrounds — OLED Dark Mode (Apple Pro Style) */
+  --bg-primary: #000000;
+  --bg-secondary: #0A0A0C;
+  --bg-card: rgba(28, 28, 30, 0.65);
+  --bg-card-hover: rgba(44, 44, 46, 0.85);
+  --bg-glass: rgba(20, 20, 22, 0.75);
+  --bg-input: rgba(44, 44, 46, 0.6);
+  --border-subtle: rgba(255, 255, 255, 0.08);
   --border-accent: rgba(228, 0, 43, 0.4);
 
-  /* Text — Dark for light theme */
-  --text-primary: #1A0A0E;
-  --text-secondary: #4A3538;
-  --text-muted: #8B6D71;
-  --text-accent: #E4002B;
+  /* Text — Light for dark theme */
+  --text-primary: #FFFFFF;
+  --text-secondary: rgba(255, 255, 255, 0.65);
+  --text-muted: rgba(255, 255, 255, 0.4);
+  --text-accent: #FF3B30;
 
   /* Gradients */
   --gradient-racing: linear-gradient(135deg, #E4002B 0%, #B70022 100%);
-  --gradient-fire: linear-gradient(135deg, #FF2D2B 0%, #FFB300 100%);
-  --gradient-ocean: linear-gradient(135deg, #E4002B 0%, #FF5252 100%);
-  --gradient-gold: linear-gradient(135deg, #FFB300 0%, #F57C00 100%);
-  --gradient-card: linear-gradient(145deg, rgba(228, 0, 43, 0.03), rgba(255, 215, 0, 0.01));
+  --gradient-fire: linear-gradient(135deg, #FF3B30 0%, #FF9500 100%);
+  --gradient-ocean: linear-gradient(135deg, #0A84FF 0%, #30D158 100%);
+  --gradient-gold: linear-gradient(135deg, #FFD60A 0%, #FF9F0A 100%);
+  --gradient-card: linear-gradient(145deg, rgba(228, 0, 43, 0.05), rgba(255, 255, 255, 0.01));
 
-  /* Shadows */
-  --shadow-glow-blue: 0 0 20px rgba(228, 0, 43, 0.15);
-  --shadow-glow-purple: 0 0 20px rgba(228, 0, 43, 0.2);
-  --shadow-card: 0 12px 40px rgba(0, 0, 0, 0.04);
-  --shadow-card-hover: 0 16px 50px rgba(228, 0, 43, 0.08);
+  /* Shadows (Apple Style Inner Borders) */
+  --shadow-glow-blue: 0 0 30px rgba(10, 132, 255, 0.15);
+  --shadow-glow-purple: 0 0 30px rgba(191, 90, 242, 0.15);
+  --shadow-card: inset 0 0 0 1px rgba(255, 255, 255, 0.05), 0 10px 40px rgba(0, 0, 0, 0.5);
+  --shadow-card-hover: inset 0 0 0 1px rgba(255, 255, 255, 0.1), 0 16px 50px rgba(0, 0, 0, 0.7);
 
   /* Spacing */
   --space-xs: 4px;
@@ -76,10 +76,10 @@
   --space-xl: 32px;
   --space-2xl: 48px;
 
-  /* Radius */
+  /* Radius (Softer Apple style) */
   --radius-sm: 8px;
-  --radius-md: 12px;
-  --radius-lg: 24px;
+  --radius-md: 14px;
+  --radius-lg: 20px;
   --radius-xl: 32px;
   --radius-full: 9999px;
 
@@ -88,171 +88,19 @@
   --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
   --font-display: 'Outfit', 'Inter', sans-serif;
 
-  /* Chart driver colors (12 distinct) */
-  --chart-1: #E4002B;
-  --chart-2: #FFB300;
-  --chart-3: #00E676;
-  --chart-4: #2979FF;
-  --chart-5: #651FFF;
-  --chart-6: #FF9100;
-  --chart-7: #00E5FF;
-  --chart-8: #F50057;
-  --chart-9: #00C853;
-  --chart-10: #D500F9;
-  --chart-11: #00B0FF;
-  --chart-12: #FF1744;
-}
-
-/* === Porsche 🏎️ 963 WEC — Pantone 1805 C (Porsche Red) + 7402 C (Gold) === */
-[data-theme="porsche"] {
-  --brand-primary: #B12B28;
-  --brand-secondary: #EBD698;
-  --brand-accent: #B12B28;
-  --brand-glow: rgba(177, 43, 40, 0.25);
-
-  --color-best: #B12B28;
-
-  /* Backgrounds — Light Porsche tint */
-  --bg-primary: #FEF2F2;
-  --bg-secondary: #FEE2E2;
-  --bg-card: #FFFFFF;
-  --bg-card-hover: #FEF2F2;
-  --bg-glass: rgba(255, 255, 255, 0.88);
-  --bg-input: #FFFFFF;
-  --border-subtle: rgba(177, 43, 40, 0.15);
-  --border-accent: rgba(177, 43, 40, 0.4);
-
-  /* Text — Dark */
-  --text-primary: #181112;
-  --text-secondary: #4C3A3C;
-  --text-muted: #8C7174;
-  --text-accent: #B12B28;
-
-  --gradient-racing: linear-gradient(135deg, #B12B28 0%, #8A2220 100%);
-  --gradient-fire: linear-gradient(135deg, #B12B28 0%, #C49F30 100%);
-  --gradient-ocean: linear-gradient(135deg, #B12B28 0%, #D44440 100%);
-  --gradient-gold: linear-gradient(135deg, #C49F30 0%, #B12B28 100%);
-  --gradient-card: linear-gradient(145deg, rgba(177, 43, 40, 0.03), rgba(235, 214, 152, 0.01));
-
-  --shadow-glow-blue: 0 0 20px rgba(177, 43, 40, 0.15);
-  --shadow-glow-purple: 0 0 20px rgba(235, 214, 152, 0.15);
-  --shadow-card: 0 12px 40px rgba(0, 0, 0, 0.04);
-  --shadow-card-hover: 0 16px 50px rgba(177, 43, 40, 0.08);
-
-  --chart-1: #B12B28;
-  --chart-2: #C49F30;
-  --chart-3: #D44440;
-  --chart-4: #2979FF;
-  --chart-5: #651FFF;
-  --chart-6: #00B0FF;
-  --chart-7: #00E676;
-  --chart-8: #FF9100;
-  --chart-9: #F50057;
-  --chart-10: #D500F9;
-  --chart-11: #00E5FF;
-  --chart-12: #FF1744;
-}
-
-/* === Toyota Gazoo Racing 🏁 GR010 Hybrid — Pantone 186 C === */
-[data-theme="toyota"] {
-  /* Brand — Pantone 186 C (#EB0A1E) ✓ */
-  --brand-primary: #EB0A1E;
-  --brand-secondary: #000000;
-  --brand-accent: #EB0A1E;
-  --brand-glow: rgba(235, 10, 30, 0.25);
-
-  --color-best: #EB0A1E;
-
-  /* Backgrounds — Light Toyota tint */
-  --bg-primary: #FEF2F2;
-  --bg-secondary: #FEE2E2;
-  --bg-card: #FFFFFF;
-  --bg-card-hover: #FEF2F2;
-  --bg-glass: rgba(255, 255, 255, 0.88);
-  --bg-input: #FFFFFF;
-  --border-subtle: rgba(235, 10, 30, 0.15);
-  --border-accent: rgba(235, 10, 30, 0.4);
-
-  /* Text — Dark */
-  --text-primary: #140C0D;
-  --text-secondary: #4D3A3D;
-  --text-muted: #8B6E72;
-  --text-accent: #EB0A1E;
-
-  --gradient-racing: linear-gradient(135deg, #EB0A1E 0%, #B80818 100%);
-  --gradient-fire: linear-gradient(135deg, #EB0A1E 0%, #FF3D3D 100%);
-  --gradient-ocean: linear-gradient(135deg, #EB0A1E 0%, #FF6B6B 100%);
-  --gradient-gold: linear-gradient(135deg, #EB0A1E 0%, #FFB300 100%);
-  --gradient-card: linear-gradient(145deg, rgba(235, 10, 30, 0.03), rgba(0, 0, 0, 0.01));
-
-  --shadow-glow-blue: 0 0 20px rgba(235, 10, 30, 0.15);
-  --shadow-glow-purple: 0 0 20px rgba(235, 10, 30, 0.15);
-  --shadow-card: 0 12px 40px rgba(0, 0, 0, 0.04);
-  --shadow-card-hover: 0 16px 50px rgba(235, 10, 30, 0.08);
-
-  --chart-1: #EB0A1E;
-  --chart-2: #FF3D3D;
-  --chart-3: #00E676;
-  --chart-4: #FFB300;
-  --chart-5: #651FFF;
-  --chart-6: #FF9100;
-  --chart-7: #F50057;
-  --chart-8: #00E5FF;
-  --chart-9: #00C853;
-  --chart-10: #D500F9;
-  --chart-11: #00B0FF;
-  --chart-12: #FF1744;
-}
-
-/* === Ford 🇺🇸 GT Le Mans — Pantone 294 C (Ford Blue) === */
-[data-theme="ford"] {
-  /* Brand — Pantone 294 C (#003478) ✓ */
-  --brand-primary: #003478;
-  --brand-secondary: #FF6B2B;
-  --brand-accent: #003478;
-  --brand-glow: rgba(0, 52, 120, 0.25);
-
-  --color-best: #FF6B2B;
-
-  /* Backgrounds — Light Ford Blue tint */
-  --bg-primary: #EFF6FF;
-  --bg-secondary: #DBEAFE;
-  --bg-card: #FFFFFF;
-  --bg-card-hover: #EFF6FF;
-  --bg-glass: rgba(255, 255, 255, 0.88);
-  --bg-input: #FFFFFF;
-  --border-subtle: rgba(0, 52, 120, 0.15);
-  --border-accent: rgba(0, 52, 120, 0.4);
-
-  /* Text — Dark */
-  --text-primary: #0A1326;
-  --text-secondary: #364766;
-  --text-muted: #7487A8;
-  --text-accent: #003478;
-
-  --gradient-racing: linear-gradient(135deg, #003478 0%, #002252 100%);
-  --gradient-fire: linear-gradient(135deg, #FF6B2B 0%, #FFB300 100%);
-  --gradient-ocean: linear-gradient(135deg, #003478 0%, #1E90FF 100%);
-  --gradient-gold: linear-gradient(135deg, #FF6B2B 0%, #E65C00 100%);
-  --gradient-card: linear-gradient(145deg, rgba(0, 52, 120, 0.03), rgba(255, 107, 43, 0.01));
-
-  --shadow-glow-blue: 0 0 20px rgba(0, 52, 120, 0.15);
-  --shadow-glow-purple: 0 0 20px rgba(255, 107, 43, 0.15);
-  --shadow-card: 0 12px 40px rgba(0, 0, 0, 0.04);
-  --shadow-card-hover: 0 16px 50px rgba(0, 52, 120, 0.08);
-
-  --chart-1: #003478;
-  --chart-2: #FF6B2B;
-  --chart-3: #FFB300;
-  --chart-4: #00E676;
-  --chart-5: #651FFF;
-  --chart-6: #F50057;
-  --chart-7: #00E5FF;
-  --chart-8: #FF9100;
-  --chart-9: #00C853;
-  --chart-10: #D500F9;
-  --chart-11: #00B0FF;
-  --chart-12: #FF1744;
+  /* Chart driver colors (12 distinct for dark mode) */
+  --chart-1: #FF3B30;
+  --chart-2: #FF9500;
+  --chart-3: #FFCC00;
+  --chart-4: #34C759;
+  --chart-5: #5AC8FA;
+  --chart-6: #007AFF;
+  --chart-7: #5856D6;
+  --chart-8: #AF52DE;
+  --chart-9: #FF2D55;
+  --chart-10: #30D158;
+  --chart-11: #FFD60A;
+  --chart-12: #64D2FF;
 }
 
 /* === Reset & Base === */
@@ -310,16 +158,29 @@ h3 { font-size: 1.15rem; letter-spacing: -0.01em; }
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: var(--space-lg) var(--space-xl);
+  padding: var(--space-md) var(--space-xl);
   background: var(--bg-glass);
   border-top: 4px solid var(--brand-primary);
   border-bottom: 1px solid var(--border-subtle);
   position: sticky;
   top: 0;
   z-index: 100;
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.02);
+  backdrop-filter: blur(24px) saturate(180%);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+  flex-wrap: wrap;
+  gap: var(--space-md);
+}
+
+@media (max-width: 768px) {
+  .app-header {
+    padding: var(--space-sm) var(--space-md);
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .app-header > div:last-child {
+    justify-content: space-between;
+  }
 }
 
 .app-header-left {
@@ -401,19 +262,21 @@ h3 { font-size: 1.15rem; letter-spacing: -0.01em; }
   padding: var(--space-sm) var(--space-md);
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-full);
-  background: var(--bg-card);
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
   color: var(--text-primary);
   font-family: var(--font-sans);
   font-size: 0.875rem;
   font-weight: 500;
   cursor: pointer;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: all 0.3s cubic-bezier(0.25, 1, 0.5, 1);
   text-decoration: none;
 }
 
 .btn:hover {
-  background: var(--bg-card-hover);
-  border-color: var(--border-accent);
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.2);
   transform: translateY(-1px);
 }
 
@@ -422,31 +285,35 @@ h3 { font-size: 1.15rem; letter-spacing: -0.01em; }
   border: none;
   color: white;
   font-weight: 600;
+  box-shadow: 0 4px 12px var(--brand-glow);
 }
 
 .btn-primary:hover {
-  opacity: 0.9;
-  box-shadow: var(--shadow-glow-purple);
+  opacity: 0.95;
+  transform: scale(1.02);
+  box-shadow: 0 8px 24px rgba(228, 0, 43, 0.6);
 }
 
 .btn-ghost {
   background: transparent;
   border-color: transparent;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
   color: var(--text-muted);
 }
 
 .btn-ghost:hover {
-  background: var(--bg-card-hover);
+  background: rgba(255, 255, 255, 0.08);
   color: var(--text-primary);
 }
 
 .btn-danger {
-  color: var(--color-dnf);
+  color: var(--text-accent);
 }
 
 .btn-danger:hover {
-  background: rgba(255, 87, 34, 0.1);
-  border-color: transparent;
+  background: rgba(255, 59, 48, 0.15);
+  border-color: rgba(255, 59, 48, 0.3);
 }
 
 .btn-sm {
@@ -461,20 +328,21 @@ h3 { font-size: 1.15rem; letter-spacing: -0.01em; }
 
 /* === Drop Zone === */
 .drop-zone {
-  border: 2px dashed var(--border-subtle);
+  border: 2px dashed rgba(255, 255, 255, 0.2);
   border-radius: var(--radius-xl);
   padding: var(--space-2xl);
   text-align: center;
-  transition: all 0.3s ease;
+  background: rgba(255, 255, 255, 0.02);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  transition: all 0.3s cubic-bezier(0.25, 1, 0.5, 1);
   cursor: pointer;
-  background: var(--bg-secondary);
 }
 
-.drop-zone:hover,
-.drop-zone.active {
-  border-color: var(--text-accent);
-  background: rgba(96, 165, 250, 0.05);
-  box-shadow: var(--shadow-glow-blue);
+.drop-zone:hover, .drop-zone.active {
+  border-color: var(--brand-primary);
+  background: rgba(228, 0, 43, 0.05);
+  box-shadow: inset 0 0 0 1px rgba(228, 0, 43, 0.2), 0 0 30px rgba(228, 0, 43, 0.15);
 }
 
 .drop-zone .icon {
@@ -685,9 +553,9 @@ h3 { font-size: 1.15rem; letter-spacing: -0.01em; }
   border-bottom: 1px solid var(--border-subtle);
   position: sticky;
   top: 0;
-  background: rgba(255, 255, 255, 0.85);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
+  background: var(--bg-card);
+  backdrop-filter: blur(12px) saturate(180%);
+  -webkit-backdrop-filter: blur(12px) saturate(180%);
   z-index: 5;
 }
 
@@ -773,13 +641,15 @@ h3 { font-size: 1.15rem; letter-spacing: -0.01em; }
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-lg);
   padding: var(--space-lg);
-  box-shadow: inset 0 1px 0 rgba(255,255,255,0.04), 0 2px 8px rgba(0,0,0,0.08);
-  transition: box-shadow 0.3s ease, transform 0.3s ease;
+  box-shadow: var(--shadow-card);
+  backdrop-filter: blur(24px) saturate(180%);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
+  transition: box-shadow 0.3s cubic-bezier(0.25, 1, 0.5, 1), transform 0.3s cubic-bezier(0.25, 1, 0.5, 1);
   overflow: hidden;
 }
 
 .chart-container:hover {
-  box-shadow: inset 0 1px 0 rgba(255,255,255,0.06), 0 4px 20px rgba(0,0,0,0.12);
+  box-shadow: var(--shadow-card-hover);
 }
 
 .chart-container h3 {

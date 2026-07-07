@@ -6,8 +6,6 @@ import { create } from 'zustand';
 import type { ParseResult, Session } from '../core/models/types';
 import { clearCache, removeFromCache } from '../services/session-cache';
 
-export type BrandTheme = 'ferrari' | 'porsche' | 'toyota' | 'ford';
-
 interface SessionStore {
   /** All loaded parse results */
   results: ParseResult[];
@@ -21,30 +19,16 @@ interface SessionStore {
   loadingProgress: { current: number; total: number } | null;
   /** Current view */
   view: 'home' | 'session' | 'driver' | 'track-records';
-  /** Active brand theme */
-  theme: BrandTheme;
 
-  // Actions
-  addResults: (newResults: ParseResult[]) => void;
-  selectSession: (session: Session) => void;
+  addResults: (results: ParseResult[]) => void;
+  selectSession: (session: Session | null) => void;
   selectDriver: (index: number | null) => void;
   removeSession: (sessionId: string) => void;
   setLoading: (loading: boolean) => void;
   setLoadingProgress: (current: number, total: number) => void;
   setView: (view: SessionStore['view']) => void;
-  setTheme: (theme: BrandTheme) => void;
   clearAll: () => void;
   goBack: () => void;
-}
-
-// Load saved theme on init
-const savedTheme = (typeof localStorage !== 'undefined'
-  ? localStorage.getItem('ac-theme') as BrandTheme | null
-  : null) ?? 'ferrari';
-
-// Apply on load
-if (typeof document !== 'undefined') {
-  document.documentElement.setAttribute('data-theme', savedTheme);
 }
 
 export const useSessionStore = create<SessionStore>((set, get) => ({
@@ -54,7 +38,6 @@ export const useSessionStore = create<SessionStore>((set, get) => ({
   isLoading: false,
   loadingProgress: null,
   view: 'home',
-  theme: savedTheme,
 
   addResults: (newResults) =>
     set((state) => ({
@@ -111,12 +94,6 @@ export const useSessionStore = create<SessionStore>((set, get) => ({
 
   setView: (view) =>
     set({ view }),
-
-  setTheme: (theme) => {
-    document.documentElement.setAttribute('data-theme', theme);
-    localStorage.setItem('ac-theme', theme);
-    set({ theme });
-  },
 
   clearAll: () => {
     // Clear shared cache in the background (fire-and-forget)

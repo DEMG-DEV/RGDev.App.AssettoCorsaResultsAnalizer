@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { ArrowLeft, Trash2, HardDrive, Trophy } from 'lucide-react';
 import { useSessionStore } from '../../stores/session-store';
-import { ThemePicker } from '../shared/ThemePicker';
 import { getCacheCount } from '../../services/session-cache';
 import { es } from '../../i18n/es';
 
@@ -58,8 +57,7 @@ export const AppShell: React.FC<Props> = ({ children }) => {
               {es.common.cachedFiles.replace('{count}', String(cachedCount))}
             </span>
           )}
-          <ThemePicker />
-          <div style={{ width: 1, height: 20, background: 'var(--border-subtle)' }} />
+          {/* Cache indicator */}
           {totalSessions > 0 && view !== 'track-records' && (
             <button className="btn btn-sm" onClick={() => setView('track-records')}>
               <Trophy size={14} />
