@@ -11,7 +11,7 @@
  */
 
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { list, put, del, head } from '@vercel/blob';
+import { list, put, del } from '@vercel/blob';
 
 const MAX_FILES = 20;
 const BLOB_PREFIX = 'ac-sessions/';
@@ -71,18 +71,8 @@ async function handleGet(res: VercelResponse) {
   const sessions = await Promise.all(
     sorted.map(async (blob) => {
       try {
-        // For private blobs, try downloadUrl first, then fall back to head()
-        let downloadUrl = blob.downloadUrl;
-
-        // If no downloadUrl from list(), get it via head()
-        if (!downloadUrl) {
-          try {
-            const headResult = await head(blob.url, { token });
-            downloadUrl = headResult.downloadUrl;
-          } catch {
-            downloadUrl = blob.url;
-          }
-        }
+        // For public stores, direct blob.url works perfectly (no signed query param required)
+        const downloadUrl = blob.url;
 
         const response = await fetch(downloadUrl);
         if (!response.ok) {
@@ -161,7 +151,7 @@ async function handlePost(req: VercelRequest, res: VercelResponse) {
 
   // Upload the new file
   const blob = await put(`${BLOB_PREFIX}${fileName}`, content, {
-    access: 'private',
+    access: 'public',
     contentType: 'application/json',
     token,
   });
