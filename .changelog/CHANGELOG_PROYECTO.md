@@ -5,6 +5,28 @@
 
 ---
 
+## ✅ Integración de Telemetría Avanzada y Renombrado de Autos
+
+| Campo | Detalle |
+|-------|---------|
+| **Fecha** | 2026-07-10 00:21:00 |
+| **Responsable** | David Mendez |
+
+### ¿Qué se realizó?
+
+Ahora es posible cambiar el nombre de los autos directamente desde las tarjetas de sesión, ideal para ponerles nombres con los que todo el equipo se sienta familiarizado (por ejemplo, "El Toyota del Jefe"). Además, dentro de la vista de Récords por Pista, si haces clic en cualquier récord de la tabla, automáticamente se desplegará en la parte inferior un análisis completo del rendimiento de ese récord (incluyendo el análisis inteligente de vuelta ideal y la telemetría vuelta por vuelta).
+
+### ¿Qué significa para el proyecto?
+
+Este avance soluciona el problema de identificar autos con códigos genéricos o poco claros del juego. A nivel de análisis, enriquece increíblemente la vista de récords, permitiendo a ingenieros y pilotos diseccionar exactamente cómo se logró ese tiempo récord sin tener que abandonar la pantalla de clasificación general.
+
+### ¿Qué va a notar el usuario/cliente?
+
+- Al pasar el ratón sobre el nombre de un auto en una tarjeta de sesión, aparecerá un pequeño ícono de lápiz; al presionarlo, podrás escribir el nombre personalizado y este se guardará permanentemente.
+- En la tabla de la Clasificación Unificada, las filas ahora reaccionan cuando pasas el cursor por encima. Al hacer clic en una de ellas, se desplegarán inmediatamente debajo todos los cuadros estadísticos y la tabla de telemetría correspondientes a ese piloto y auto.
+
+---
+
 ## ✅ Rediseño estructural y visual para computadoras y móviles
 
 | Campo | Detalle |

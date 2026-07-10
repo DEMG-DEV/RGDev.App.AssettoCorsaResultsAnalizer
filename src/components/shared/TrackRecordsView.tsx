@@ -6,6 +6,8 @@ import { PositionBadge } from './PositionBadge';
 import { CarPreviewImage } from './CarPreviewImage';
 import { Trophy, Calendar, Compass, AlertTriangle, Disc, Zap } from 'lucide-react';
 import { TrackRecordsCharts } from './TrackRecordsCharts';
+import { DataAnalysis } from '../session/DataAnalysis';
+import { TelemetryTable } from '../session/TelemetryTable';
 
 interface TrackRecordEntry {
   driverName: string;
@@ -25,10 +27,13 @@ interface TrackRecordEntry {
   sessionDate: Date;
   fileName: string;
   totalLaps: number;
+  originalSession: any;
+  originalParticipant: any;
 }
 
 export const TrackRecordsView: React.FC = () => {
   const results = useSessionStore(s => s.results);
+  const [selectedRecordKey, setSelectedRecordKey] = useState<string | null>(null);
   
   // Group all sessions by track venue name
   const tracksMap = useMemo(() => {
@@ -117,6 +122,8 @@ export const TrackRecordsView: React.FC = () => {
             sessionDate: date,
             fileName,
             totalLaps: p.totalLaps,
+            originalSession: session,
+            originalParticipant: p,
           });
         }
       }
@@ -135,6 +142,8 @@ export const TrackRecordsView: React.FC = () => {
   }
 
   const recordLeader = records[0];
+  const activeRecordKey = selectedRecordKey ?? (recordLeader ? `${recordLeader.driverName}-${recordLeader.carId}` : null);
+  const activeRecord = records.find(r => `${r.driverName}-${r.carId}` === activeRecordKey);
 
   return (
     <div className="animate-in" style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-lg)' }}>
@@ -259,20 +268,26 @@ export const TrackRecordsView: React.FC = () => {
                 <tbody>
                   {records.map((entry, idx) => {
                     const gapMs = idx > 0 ? entry.bestLapMs - recordLeader!.bestLapMs : 0;
+                    const entryKey = `${entry.driverName}-${entry.carId}`;
+                    const isActive = entryKey === activeRecordKey;
                     
                     return (
-                      <tr key={`${entry.driverName}-${entry.carId}`}>
+                      <tr 
+                        key={entryKey}
+                        onClick={() => setSelectedRecordKey(entryKey)}
+                        style={{ cursor: 'pointer', background: isActive ? 'rgba(255, 255, 255, 0.05)' : undefined }}
+                      >
                         <td className="pos-cell">
                           <PositionBadge position={idx + 1} />
                         </td>
                         <td>
-                          <span style={{ fontWeight: 700, color: 'var(--text-primary)' }}>
+                          <span style={{ fontWeight: 700, color: isActive ? 'var(--brand-primary)' : 'var(--text-primary)' }}>
                             {entry.driverName}
                           </span>
                         </td>
                         <td>
                           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                            <div style={{ width: 44, height: 44, borderRadius: 6, overflow: 'hidden', background: 'var(--bg-secondary)', flexShrink: 0 }}>
+                            <div style={{ width: 44, height: 44, borderRadius: 6, overflow: 'hidden', background: 'var(--bg-secondary)', flexShrink: 0, border: isActive ? '1px solid var(--brand-primary)' : 'none' }}>
                               <CarPreviewImage carId={entry.carId} skinName={entry.skin} />
                             </div>
                             <span style={{ fontWeight: 600 }}>{humanizeCarId(entry.carId)}</span>
@@ -357,6 +372,14 @@ export const TrackRecordsView: React.FC = () => {
               </table>
             </div>
           </div>
+
+          {/* Active Record Analytics */}
+          {activeRecord && activeRecord.originalSession && activeRecord.originalParticipant && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-lg)' }}>
+              <DataAnalysis session={activeRecord.originalSession} />
+              <TelemetryTable session={activeRecord.originalSession} participant={activeRecord.originalParticipant} />
+            </div>
+          )}
         </div>
       )}
     </div>

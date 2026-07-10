@@ -5,6 +5,44 @@
 
 ---
 
+## feat: add car renaming and detailed analytics to track records
+
+| Campo | Detalle |
+|-------|---------|
+| **Fecha** | 2026-07-10 00:21:00 |
+| **Autor** | David Mendez (demg@outlook.com) |
+| **Branch** | main |
+| **Tipo** | Feature |
+
+### Archivos Modificados
+
+| Archivo | Estado | Descripción del Cambio |
+|---------|--------|----------------------|
+| `src/stores/session-store.ts` | Modificado | Se agregó el estado `carAliases` y la acción `setCarAlias`. Se implementó el middleware `persist` de zustand para guardar los alias permanentemente. |
+| `src/core/utils/car-name-humanizer.ts` | Modificado | Se modificó `humanizeCarId` para extraer y retornar primero el alias personalizado desde `session-store` si existe. |
+| `src/components/session-list/SessionCard.tsx` | Modificado | Se integró un botón con el icono `Edit2` al lado del nombre del auto que abre un `window.prompt` para definir el nuevo alias y lo guarda en el store. |
+| `src/components/shared/TrackRecordsView.tsx` | Modificado | Se agregó estado `selectedRecordKey` para seleccionar un récord de la tabla. Al seleccionar, se renderizan dinámicamente los componentes `DataAnalysis` y `TelemetryTable` con la sesión original debajo de la tabla unificada. |
+
+### Detalle Técnico
+
+Se implementó un sistema de alias global para los autos. El alias se guarda persistentemente usando `zustand/middleware` (`persist`) parcializado únicamente para la propiedad `carAliases`, evitando así impactar el caché IndexDB existente para los resultados crudos. 
+
+A nivel de visualización, `TrackRecordsView.tsx` fue refactorizado. Originalmente calculaba métricas estáticas por piloto/auto. Ahora, conserva una referencia estricta a la `originalSession` y `originalParticipant`. Las filas de la "Clasificación Unificada" son clickeables y expanden, debajo de la tabla, los componentes de telemetría completa (`DataAnalysis` y `TelemetryTable`), dando una visión muy profunda (lap-by-lap, gráficos de desgaste y análisis del mejor sector) del récord actual sin necesidad de salir de la vista de récords.
+
+### Fragmentos de Código Relevantes
+
+```diff
++      setCarAlias: (carId, alias) =>
++        set((state) => ({
++          carAliases: {
++            ...state.carAliases,
++            [carId]: alias,
++          },
++        })),
+```
+
+---
+
 ## feat: rebuild UI architecture to native macOS sidebar layout
 
 | Campo | Detalle |

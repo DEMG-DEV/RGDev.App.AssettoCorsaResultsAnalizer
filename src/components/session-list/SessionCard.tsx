@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Clock, Users, Flag, Gauge, Trash2 } from 'lucide-react';
+import { Clock, Users, Flag, Gauge, Trash2, Edit2 } from 'lucide-react';
 import type { Session } from '../../core/models/types';
 import { humanizeTrackName, humanizeCarId } from '../../core/utils/car-name-humanizer';
 import { formatLapTime, formatSessionDate } from '../../core/utils/time-formatter';
@@ -117,8 +117,23 @@ export const SessionCard: React.FC<Props> = ({ session, sessionDate }) => {
                 <span style={{ fontSize: '0.82rem', fontWeight: i === 0 ? 600 : 400, color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                   {p.drivers[0]?.name ?? '—'}
                 </span>
-                <span style={{ fontSize: '0.65rem', color: 'var(--text-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                  {humanizeCarId(p.vehicle.modelId)}
+                <span style={{ fontSize: '0.65rem', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: 4, overflow: 'hidden' }}>
+                  <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={p.vehicle.modelId}>
+                    {humanizeCarId(p.vehicle.modelId)}
+                  </span>
+                  <button 
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      const newName = window.prompt('Introduce el nuevo nombre para este auto:', humanizeCarId(p.vehicle.modelId));
+                      if (newName !== null && newName.trim() !== '') {
+                        useSessionStore.getState().setCarAlias(p.vehicle.modelId, newName.trim());
+                      }
+                    }}
+                    style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 2, display: 'inline-flex', opacity: 0.5 }}
+                    title="Renombrar Auto"
+                  >
+                    <Edit2 size={10} color="currentColor" />
+                  </button>
                 </span>
               </div>
             </div>

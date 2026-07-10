@@ -1,3 +1,5 @@
+import { useSessionStore } from '../../stores/session-store';
+
 /**
  * Humanizes raw car model IDs into readable names.
  * Used as fallback when ui_car.json is not available.
@@ -14,6 +16,9 @@ const PREFIXES_TO_STRIP = [
  * E.g., "ks_toyota_gt86" → "Toyota GT86"
  */
 export function humanizeCarId(carId: string): string {
+  const alias = useSessionStore.getState().carAliases?.[carId];
+  if (alias && alias.trim() !== '') return alias;
+
   let name = carId;
 
   // Strip known prefixes
